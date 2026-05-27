@@ -1,0 +1,23 @@
+# Secrets
+tools/openai_api_key.txt
+tools/api_keys.txt
+tools/api_key_cooldowns.json
+*.env
+
+# Python / PowerShell runtime noise
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.bak
+
+# Generated reports, backups, and transient state
+maintenance/reports/
+maintenance/backups/
+maintenance/cache/
+maintenance/ai_current_task.txt
+
+# Local editor / OS files
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
