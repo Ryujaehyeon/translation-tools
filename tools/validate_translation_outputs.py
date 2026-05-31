@@ -286,7 +286,11 @@ def main() -> int:
     if args.output_root:
         korean_root = resolve_pack_path(args.output_root)
     else:
+        # --output-root 미지정 시 integrated_korean_translation_pack 폴더로 폴백.
+        # run_pipeline.py는 항상 --output-root를 명시해서 전달한다.
+        # 단독 실행 시에는 --output-root를 직접 지정할 것.
         korean_root = PACK_ROOT / "localisation" / "korean"
+        print(f"[경고] --output-root 미지정: {korean_root} 를 검증합니다.", flush=True)
     report_root = resolve_pack_path(args.report_dir)
 
     if not (mod_root / "localisation").is_dir():

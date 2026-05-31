@@ -982,8 +982,8 @@ def build_commands(
             commands.append(skip_step("translate_keys", "api_key.txt not found"))
             commands.append(skip_step("validate_auto_key_tokens", "api_key.txt not found"))
 
+    integrated = is_integrated_mode(args.integrated)
     if not args.skip_translation:
-        integrated = is_integrated_mode(args.integrated)
         if not integrated:
             ensure_standalone_mod(mod["mod_id"], mod["name"])
         translation_cmd = [
