@@ -102,7 +102,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--translate",
         action="store_true",
-        help="Fill blank korean_value cells with translate_keys.py before export. Requires tools/openai_api_key.txt.",
+        help="Fill blank korean_value cells with translate_keys.py before export. Requires tools/api_key.txt.",
     )
     parser.add_argument(
         "--skip-validation",
@@ -940,7 +940,7 @@ def build_commands(
         )
 
     if args.translate:
-        api_key_file = TOOLS_ROOT / "openai_api_key.txt"
+        api_key_file = TOOLS_ROOT / "api_key.txt"
         if api_key_file.is_file():
             commands.append(
                 command_step(
@@ -971,9 +971,9 @@ def build_commands(
                 )
             )
         else:
-            print(f"warning: --translate skipped for {mod['mod_id']}: openai_api_key.txt not found", flush=True)
-            commands.append(skip_step("translate_keys", "openai_api_key.txt not found"))
-            commands.append(skip_step("validate_auto_key_tokens", "openai_api_key.txt not found"))
+            print(f"warning: --translate skipped for {mod['mod_id']}: api_key.txt not found", flush=True)
+            commands.append(skip_step("translate_keys", "api_key.txt not found"))
+            commands.append(skip_step("validate_auto_key_tokens", "api_key.txt not found"))
 
     if not args.skip_translation:
         integrated = is_integrated_mode(args.integrated)
