@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""Translate Stellaris auto_keys CSV files with OpenAI GPT-4.1 mini.
+"""Translate Stellaris auto_keys CSV files with Claude or OpenAI.
 
 Default behavior is conservative:
 
@@ -41,12 +41,13 @@ AUTO_KEYS_DIR = translation_keys_root()
 REPORT_DIR = PACK_ROOT / "maintenance" / "reports" / "ai_translation"
 BACKUP_ROOT = PACK_ROOT / "maintenance" / "backups" / "translate_keys"
 LOCK_FILE_PATH = PACK_ROOT / "maintenance" / "ai_current_task.txt"
-DEFAULT_API_KEY_FILE = SCRIPT_DIR / "openai_api_key.txt"
+DEFAULT_API_KEY_FILE = SCRIPT_DIR / "api_key.txt"
+_LEGACY_API_KEY_FILE = SCRIPT_DIR / "openai_api_key.txt"  # 하위호환 폴백
 DEFAULT_GUIDELINES_FILE = PACK_ROOT / "maintenance" / "translation_guidelines.md"
 DEFAULT_GLOSSARY_FILE = PACK_ROOT / "maintenance" / "term_glossary.csv"
 
-# 기본 모델: gpt-4o-mini (비용·품질 균형 최적)
-DEFAULT_MODEL = "gpt-4o-mini"
+# 기본 모델: claude-haiku-4-5 (비용·품질 균형 최적)
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 # 온도: 0.0=완전 결정론, 1.0=창의적. 번역은 0.1~0.3이 적합 (일관성 우선)
 DEFAULT_TEMPERATURE = 0.2
 # API 실패 시 최대 재시도 횟수 (지수 대기 적용)
@@ -146,7 +147,8 @@ def console_text(value: object) -> str:
 
 @dataclass
 class TranslationConfig:
-    # OpenAI 모델명 (gpt-4o-mini, gpt-4.1-mini 등)
+    # 모델명. Claude: claude-haiku-4-5-20251001, claude-sonnet-4-6 등
+    #        OpenAI: gpt-4o-mini, gpt-4.1-mini 등
     model: str = DEFAULT_MODEL
     # 번역 온도 (0.0~1.0): 낮을수록 결정론적, 번역에는 0.1~0.3 권장
     temperature: float = DEFAULT_TEMPERATURE
@@ -320,10 +322,18 @@ def parse_args() -> argparse.Namespace:
 def normalize_model_name(model: str) -> str:
     # 자주 쓰이는 오탈자/별명을 정규 모델 ID로 변환
     aliases = {
+        # OpenAI
         "gpt-4.1o-mini": "gpt-4.1-mini",
         "gpt-4.1-o-mini": "gpt-4.1-mini",
         "gpt4.1-mini": "gpt-4.1-mini",
         "gpt4o-mini": "gpt-4o-mini",
+        # Claude 약칭
+        "haiku": "claude-haiku-4-5-20251001",
+        "sonnet": "claude-sonnet-4-6",
+        "opus": "claude-opus-4-8",
+        "claude-haiku": "claude-haiku-4-5-20251001",
+        "claude-sonnet": "claude-sonnet-4-6",
+        "claude-opus": "claude-opus-4-8",
     }
     return aliases.get(model.strip(), model.strip())
 
@@ -826,26 +836,51 @@ def is_suspicious_translation(eng_inner: str, kor_inner: str) -> bool:
     return False
 
 
+def _detect_provider(key: str) -> str:
+    """API 키 prefix로 provider를 자동 감지한다.
+
+    sk-ant- 또는 sk-ant로 시작하면 anthropic, 그 외는 openai.
+    """
+    if key.startswith("sk-ant"):
+        return "anthropic"
+    return "openai"
+
+
 class APIKeyManager:
-    """OpenAI API 키를 환경 변수 → 파일 순서로 로드한다."""
+    """API 키를 환경 변수 → 파일 순서로 로드하고 provider를 자동 감지한다.
+
+    키 파일 우선순위:
+      1. ANTHROPIC_API_KEY 환경 변수
+      2. OPENAI_API_KEY 환경 변수
+      3. tools/api_key.txt
+      4. tools/openai_api_key.txt (하위호환 폴백)
+
+    provider는 키 prefix로 자동 감지된다:
+      sk-ant-... → anthropic
+      sk-...     → openai
+    """
 
     def __init__(self, api_key_file: str | Path = DEFAULT_API_KEY_FILE) -> None:
         self.api_key_file = Path(api_key_file)
         self.api_key = self._load_key()
+        self.provider = _detect_provider(self.api_key)
 
     def _load_key(self) -> str:
-        # 1순위: OPENAI_API_KEY 환경 변수
-        env_key = os.environ.get("OPENAI_API_KEY", "").strip()
-        if env_key:
-            return env_key
-        # 2순위: tools/openai_api_key.txt (# 주석 줄 무시)
-        if self.api_key_file.is_file():
-            for line in self.api_key_file.read_text(encoding="utf-8").splitlines():
-                stripped = line.strip()
-                if stripped and not stripped.startswith("#"):
-                    return stripped
+        # 1순위: ANTHROPIC_API_KEY 환경 변수
+        for env_var in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY"):
+            env_key = os.environ.get(env_var, "").strip()
+            if env_key:
+                return env_key
+        # 2순위: api_key.txt → openai_api_key.txt (하위호환)
+        for candidate in (self.api_key_file, _LEGACY_API_KEY_FILE):
+            if candidate.is_file():
+                for line in candidate.read_text(encoding="utf-8").splitlines():
+                    stripped = line.strip()
+                    if stripped and not stripped.startswith("#"):
+                        return stripped
         raise ValueError(
-            "OpenAI API 키가 없습니다. OPENAI_API_KEY 환경 변수 또는 tools/openai_api_key.txt에 키를 설정하세요."
+            "API 키가 없습니다. ANTHROPIC_API_KEY / OPENAI_API_KEY 환경 변수 또는 "
+            "tools/api_key.txt에 키를 설정하세요."
         )
 
 
@@ -949,11 +984,19 @@ class Translator:
         # TPMThrottle에 실제 시스템 프롬프트 토큰 수 전달 (지침서 포함 후 확정)
         if tpm_throttle is not None:
             tpm_throttle._system_tokens = max(1, len(self.system_prompt_full) // 3)
-        try:
-            from openai import OpenAI
-        except ModuleNotFoundError as exc:
-            raise TranslationFatalError("openai 패키지가 없습니다. `python -m pip install openai`를 실행하세요.") from exc
-        self.client = OpenAI(api_key=self.key_manager.api_key)
+        self.provider = self.key_manager.provider
+        if self.provider == "anthropic":
+            try:
+                import anthropic as _anthropic
+            except ModuleNotFoundError as exc:
+                raise TranslationFatalError("anthropic 패키지가 없습니다. `python -m pip install anthropic`를 실행하세요.") from exc
+            self.client = _anthropic.Anthropic(api_key=self.key_manager.api_key)
+        else:
+            try:
+                from openai import OpenAI
+            except ModuleNotFoundError as exc:
+                raise TranslationFatalError("openai 패키지가 없습니다. `python -m pip install openai`를 실행하세요.") from exc
+            self.client = OpenAI(api_key=self.key_manager.api_key)
 
     def _build_user_prompt(
         self,
@@ -1015,24 +1058,35 @@ class Translator:
                 # TPM acquire는 메인 스레드(process_csv_file)에서 이미 처리됨
                 # 여기서 중복 호출하지 않는다
                 self.request_count += 1
-                response = self.client.chat.completions.create(
-                    model=self.config.model,
-                    temperature=self.config.temperature,
-                    messages=[
-                        {"role": "system", "content": active_system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                )
-                content = response.choices[0].message.content or ""
+                if self.provider == "anthropic":
+                    response = self.client.messages.create(
+                        model=self.config.model,
+                        max_tokens=1024,
+                        system=active_system_prompt,
+                        messages=[{"role": "user", "content": user_prompt}],
+                    )
+                    content = response.content[0].text if response.content else ""
+                    total_tokens = (response.usage.input_tokens or 0) + (response.usage.output_tokens or 0)
+                else:
+                    response = self.client.chat.completions.create(
+                        model=self.config.model,
+                        temperature=self.config.temperature,
+                        messages=[
+                            {"role": "system", "content": active_system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                    )
+                    content = response.choices[0].message.content or ""
+                    total_tokens = response.usage.total_tokens if response.usage else 0
                 result = strip_code_fence(content)
                 if not result:
                     preview = repr(content) if content else "<빈 문자열>"
                     print(f"  [디버그] 빈 응답 — key: {key} / 원문: {console_text(text)}")
-                    print(f"  [디버그] OpenAI raw content: {preview}")
-                    raise RuntimeError("Empty response from OpenAI")
+                    print(f"  [디버그] API raw content: {preview}")
+                    raise RuntimeError("Empty response from API")
                 # 추정치 대신 API가 알려준 실제 토큰 수로 TPM 버킷 보정
-                if self.tpm_throttle and response.usage:
-                    self.tpm_throttle.record_actual(response.usage.total_tokens)
+                if self.tpm_throttle and total_tokens:
+                    self.tpm_throttle.record_actual(total_tokens)
                 self.translated_count += 1
                 if self.config.request_delay > 0:
                     time.sleep(self.config.request_delay)
@@ -1041,11 +1095,11 @@ class Translator:
                 last_error = exc
                 message = str(exc)
                 lower = message.lower()
-                print(f"  [경고] OpenAI 번역 실패 (key={key}, 시도={attempt+1}/{max(1, self.config.max_retries)}): {console_text(message)}")
+                print(f"  [경고] API 번역 실패 (key={key}, 시도={attempt+1}/{max(1, self.config.max_retries)}): {console_text(message)}")
                 # 복구 불가 오류: 모델명 오류, 접근 권한 없음 등
-                if "model_not_found" in lower or "does not exist" in lower or "invalid_request_error" in lower:
+                if "model_not_found" in lower or "does not exist" in lower or "invalid_request_error" in lower or "not_found_error" in lower:
                     raise TranslationFatalError(
-                        f"OpenAI 모델을 찾을 수 없거나 접근 권한이 없습니다: {self.config.model}"
+                        f"모델을 찾을 수 없거나 접근 권한이 없습니다: {self.config.model}"
                     ) from exc
                 if any(token in lower for token in ("rate limit", "429", "temporarily unavailable", "timeout")):
                     # API 응답에서 retry_after 시간을 파싱해 TPM throttle에 전달
@@ -1062,7 +1116,7 @@ class Translator:
                 # 일반 오류: 지수 대기 후 재시도 (최대 15초)
                 if attempt < self.config.max_retries - 1:
                     time.sleep(min(3 * (attempt + 1), 15))
-        raise RuntimeError("OpenAI retries exhausted") from last_error
+        raise RuntimeError("API retries exhausted") from last_error
 
 
 def iter_csv_files(auto_keys_dir: Path, mods: set[str], file_filters: list[str]) -> list[Path]:

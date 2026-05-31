@@ -13,7 +13,7 @@
 ### 패키지 설치
 
 ```powershell
-pip install openai tiktoken chardet
+pip install -r tools/requirements.txt
 ```
 
 ### 폴더 구조
@@ -34,11 +34,18 @@ Windows 기본 설치 경로(`C:\Program Files (x86)\Steam` 또는 `D:\...`)를 
 
 ### API 키 설정 (선택)
 
-Claude API를 사용한 자동 번역을 원할 경우 `tools/` 아래에 키 파일을 추가한다.
+자동 번역을 사용하려면 `tools/api_key.txt`에 키를 넣는다.
 
 ```text
-tools/openai_api_key.txt   # 파일 내용: sk-... (키 문자열만)
+tools/api_key.txt   # 파일 내용: API 키 문자열만 (주석은 # 으로 시작)
 ```
+
+지원 provider:
+
+- `sk-ant-...` → Anthropic (Claude) — 기본 모델: `claude-haiku-4-5-20251001`
+- `sk-...`     → OpenAI             — 기본 모델: `gpt-4o-mini`
+
+환경 변수로도 설정 가능: `ANTHROPIC_API_KEY` 또는 `OPENAI_API_KEY`
 
 API 키가 없으면 자동 번역 없이 수동 번역 흐름만 사용할 수 있다.
 
