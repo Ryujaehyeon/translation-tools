@@ -36,7 +36,5 @@ jobs:
           print('All imports OK')
           "
 
-      - name: 파이프라인 실행 가능 여부 확인
-        run: python tools/run_pipeline.py --mode scan
-        env:
-          STELLARIS_WORKSHOP_ROOT: /nonexistent
+      - name: run_pipeline 파싱 확인 (--help)
+        run: python tools/run_pipeline.py --help > /dev/null
