@@ -1,7 +1,7 @@
 # 협업 참고 문서 — Stellaris 통합 한국어 번역 팩
 
 > AI 또는 신규 협업자가 작업 맥락을 바로 파악할 수 있도록 작성된 문서입니다.
-> 최종 갱신: 2026-05-27 (8차)
+> 최종 갱신: 2026-05-31 (9차)
 
 ---
 
@@ -196,7 +196,64 @@ Gigastructural Engineering의 `gc_kilo` 등 색상 마커 키에 `​`가 포함
 
 ---
 
-## 8. 참조 문서
+## 8. 코드 검수 절차
+
+translation-tools 코드를 수정할 때 반드시 아래 흐름을 따른다.
+
+### 8-1. 흐름
+
+```text
+이슈 발견 → GitHub 이슈 등록 → 수정 (커밋) → 드라이런 확인 → 이슈 클로즈
+```
+
+### 8-2. 단계별 방법
+
+#### ① 이슈 등록
+
+```powershell
+gh issue create --title "제목" --label "bug|enhancement|documentation" --body "내용"
+```
+
+#### ② 수정 커밋
+
+커밋 메시지에 반드시 포함:
+
+- **무엇을**: 변경된 파일·함수
+- **왜**: 문제 원인 또는 개선 이유
+
+```text
+fix: run_pipeline.py의 integrated 변수 스코프 버그
+
+skip_translation=True 시 validate 단계에서 NameError 발생.
+integrated 변수를 skip_translation 블록 밖으로 이동.
+```
+
+#### ③ 드라이런 확인
+
+```powershell
+# 기본 확인 (3개 모드)
+python tools/run_pipeline.py --mode plan --use-cache --limit 3
+
+# 특정 모드 확인
+python tools/run_pipeline.py --mode report --use-cache --mod-ids <id> --dry-run
+```
+
+출력에 오류 없이 `ok` 상태가 나오면 클린.
+
+#### ④ 이슈 클로즈
+
+```powershell
+gh issue close <N> --comment "해결: <수정 내용> (commit <hash>)"
+```
+
+### 8-3. 예외
+
+- 오탈자·주석 수정 등 동작에 영향 없는 변경은 드라이런 생략 가능
+- 여러 이슈가 같은 원인이면 하나로 묶어 등록
+
+---
+
+## 9. 참조 문서
 
 | 문서 | 내용 |
 |---|---|
@@ -216,6 +273,16 @@ Gigastructural Engineering의 `gc_kilo` 등 색상 마커 키에 `​`가 포함
 | 2026-05-27 | `run.ps1 extract <workshop_id>`만으로 `maintenance\translation_keys\<slug>__<workshop_id>` 경로 자동 생성하도록 개선 |
 | 2026-05-27 | `workflow.md` 명령 예시를 `run.ps1` 기준으로 정리, 런처 미지원 명령은 직접 실행 주석 추가, 임시 `_*.py` 스크립트 8개를 `tools/scratch/`로 이동, 파이프라인 전역 `--dry-run` 안전 분기 추가 |
 | 2026-05-27 | `run_pipeline.py --translate` 추가 — extract/import-ref 후 `translate_keys.py` + `validate_auto_key_tokens.py` 연결, API 키 없을 때 모드별 skip 처리, `run.ps1 pipeline -Translate` 연결 |
+| 2026-05-31 | 코드 검수 절차 COLLABORATION.md에 추가 (섹션 8) |
+| 2026-05-31 | 코드 최적화 — `resolve_pack_path()` / `english_source_root()` 4개 파일 중복 → `tool_config.py` 단일 정의로 통합, `strip_prompt_echo()` 정규식 단일 루프로 개선, `limit_rows` 도달 시 `continue`→`break` 조기 종료 |
+| 2026-05-31 | 검수 이슈 5건 수정 — 레거시 스크립트 삭제, 환경변수 키 translate 스킵 버그, CACHE_VERSION 주석, 하드코딩 경로 중복, TPM 기본값 안전 하한 |
+| 2026-05-31 | `validate_translation_outputs.py` `--output-root` 추가, `run_pipeline.py` validate 호출 시 output_root 전달 |
+| 2026-05-31 | `run_pipeline.py` `integrated` 변수 스코프 버그 수정 (`--skip-translation` 시 NameError) |
+| 2026-05-31 | GitHub CLI 설치 및 인증, 이슈 등록·클로즈 워크플로 확립 |
+| 2026-05-31 | 단일/통합 출력 모드 추가 — `--integrated` 플래그, `tooling.ini [output] mode` 설정, standalone 시 `descriptor.mod` 자동 생성 |
+| 2026-05-31 | Claude/OpenAI 멀티 provider 지원 — `api_key.txt` 통합, prefix `sk-ant-` 감지로 자동 분기 |
+| 2026-05-31 | TPM 기본값 100,000으로 통일 (Anthropic 무료 티어 기준), `tooling.ini`에서 일괄 관리 |
+| 2026-05-31 | `giga_gui_main_menu.gui` 번역 팩에 추가 — 기가스트럭처 설정 메뉴 하드코딩 텍스트 120개 한국어 교체 |
 | 2026-05-27 | `translation-tools/` 폴더 신설 — tools/ + maintenance/ 분리 이전, `run.ps1` 런처 추가, PS 경고 수정 (`$args`→`$pyArgs`, `mod-args`→`Get-ModArgs`) |
 | 2026-05-27 | Merged Leader Levels (als/gle/sls/rls) 번역 검수 완료 — 미번역 영단어, §EE 이중코드, 누락 숫자 등 수정 |
 | 2026-05-27 | Extra Leader Traits(`3334925693`) 한국어 번역 파일 추출 → 통합한글모드 + 개별모드(`addon_Extra_Leader_Traits_kr`) 신규 생성 |
