@@ -46,18 +46,18 @@ _LEGACY_API_KEY_FILE = SCRIPT_DIR / "openai_api_key.txt"  # 하위호환 폴백
 DEFAULT_GUIDELINES_FILE = PACK_ROOT / "maintenance" / "translation_guidelines.md"
 DEFAULT_GLOSSARY_FILE = PACK_ROOT / "maintenance" / "term_glossary.csv"
 
-# 기본 모델: gpt-4o-mini (가장 저렴한 모델로 설정)
+# 기본 모델: gpt-4o-mini (저렴한 편이며 번역 품질 검증된 모델)
 # 2026-05 기준 가격 (input / output, USD per 1M tokens)
 #
 # ── 저렴한 순 ──────────────────────────────────────────────────
-# gpt-4o-mini               $0.15 / $0.60   ← 기본값, 최저가
-# gpt-4.1-mini              $0.40 / $1.60
-# claude-haiku-4-5-20251001  $1.00 / $5.00
+# gpt-4.1-nano               $0.10 / $0.40   (OpenAI 최저가)
+# gpt-4o-mini                $0.15 / $0.60   ← 기본값
+# gpt-4.1-mini               $0.40 / $1.60
 #
 # ── 성능 좋은 순 ───────────────────────────────────────────────
-# claude-opus-4-8            $5.00 / $25.00  (Anthropic 최상위)
-# claude-sonnet-4-6          $3.00 / $15.00  (성능·비용 균형 최적)
-# gpt-4.1-mini              $0.40 / $1.60   (OpenAI 중상급)
+# claude-opus-4-8             $5.00 / $25.00  (Anthropic 최상위)
+# claude-sonnet-4-6           $3.00 / $15.00  (성능·비용 균형 최적)
+# claude-haiku-4-5-20251001   $1.00 / $5.00   (Claude 중저가)
 DEFAULT_MODEL = "gpt-4o-mini"
 # 온도: 0.0=완전 결정론, 1.0=창의적. 번역은 0.1~0.3이 적합 (일관성 우선)
 DEFAULT_TEMPERATURE = 0.2
