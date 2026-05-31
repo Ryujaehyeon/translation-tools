@@ -129,11 +129,8 @@ def print_block(header: str, **fields: str) -> None:
                    번역: ...
     """
     print(header, flush=True)
-    # "] " 이후 첫 내용 시작 위치로 들여쓰기 맞춤
-    bracket_end = header.find("] ")
-    indent = " " * (bracket_end + 2) if bracket_end >= 0 else "    "
     for label, value in fields.items():
-        print(f"{indent}{label}: {value}", flush=True)
+        print(f"{label}: {value}", flush=True)
 
 
 # 복구 불가능한 오류 (잘못된 모델명, API 키 없음 등) — 발생 시 즉시 작업 중단
