@@ -203,8 +203,10 @@ translation-tools 코드를 수정할 때 반드시 아래 흐름을 따른다.
 ### 8-1. 흐름
 
 ```text
-이슈 발견 → GitHub 이슈 등록 → 수정 (커밋) → 드라이런 확인 → 이슈 클로즈
+이슈 발견 → GitHub 이슈 등록 → 수정 (커밋·push) → CI 대기 → 드라이런 확인 → 이슈 클로즈
 ```
+
+CI 실패 시: 로그 확인 → 재수정 → 재push → CI 재확인 반복
 
 ### 8-2. 단계별 방법
 
@@ -228,7 +230,21 @@ skip_translation=True 시 validate 단계에서 NameError 발생.
 integrated 변수를 skip_translation 블록 밖으로 이동.
 ```
 
-#### ③ 드라이런 확인
+#### ③ CI 확인 (push 후 자동 실행)
+
+push하면 GitHub Actions가 자동으로 문법 검사·import 확인을 수행한다.
+
+```powershell
+# 결과 확인
+gh run list --limit 3
+
+# 실패 시 로그 읽기
+gh run view <run-id> --log-failed
+```
+
+CI가 통과하면 다음 단계로 진행.
+
+#### ④ 드라이런 확인
 
 ```powershell
 # 기본 확인 (3개 모드)
@@ -240,7 +256,7 @@ python tools/run_pipeline.py --mode report --use-cache --mod-ids <id> --dry-run
 
 출력에 오류 없이 `ok` 상태가 나오면 클린.
 
-#### ④ 이슈 클로즈
+#### ⑤ 이슈 클로즈
 
 ```powershell
 gh issue close <N> --comment "해결: <수정 내용> (commit <hash>)"
