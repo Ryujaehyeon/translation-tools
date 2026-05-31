@@ -1,6 +1,66 @@
 ﻿# 통합 번역팩 자동 처리 매뉴얼
 
-최종 갱신: 2026-05-24
+최종 갱신: 2026-05-31
+
+## 설치 및 준비
+
+### 사전 요구사항
+
+- Python 3.10 이상
+- PowerShell 7 이상 (Windows 기본 PowerShell 5는 불가)
+- Steam + Stellaris 설치됨
+
+### 패키지 설치
+
+```powershell
+pip install openai tiktoken chardet
+```
+
+### 폴더 구조
+
+이 저장소(`translation-tools`)는 번역팩 폴더 안에 위치해야 한다.
+
+```text
+mod/
+  integrated_korean_translation_pack/   # 번역팩 (Stellaris 모드)
+  translation-tools/                    # 이 저장소
+    run.ps1
+    tools/
+    maintenance/
+```
+
+Steam 경로(`workshop/content/281990`)는 자동으로 탐지한다.
+Windows 기본 설치 경로(`C:\Program Files (x86)\Steam` 또는 `D:\...`)를 자동으로 찾으며, 찾지 못하면 `tooling.ini`에서 직접 지정할 수 있다.
+
+### API 키 설정 (선택)
+
+Claude API를 사용한 자동 번역을 원할 경우 `tools/` 아래에 키 파일을 추가한다.
+
+```text
+tools/openai_api_key.txt   # 파일 내용: sk-... (키 문자열만)
+```
+
+API 키가 없으면 자동 번역 없이 수동 번역 흐름만 사용할 수 있다.
+
+### 첫 실행
+
+```powershell
+cd translation-tools
+
+# 1. 처리 가능한 모드 목록 확인
+python tools/run_pipeline.py --mode scan
+
+# 2. 특정 모드 키 추출
+.\run.ps1 extract <workshop_id>
+
+# 3. 번역 파일 생성 (dry-run으로 먼저 확인)
+.\run.ps1 export <workshop_id> --dry-run
+
+# 4. 실제 반영
+.\run.ps1 export <workshop_id>
+```
+
+---
 
 ## 기본 위치
 
