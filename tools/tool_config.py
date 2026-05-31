@@ -50,6 +50,18 @@ def workshop_root() -> Path:
     return Path(raw or DEFAULT_WORKSHOP_ROOT)
 
 
+def is_integrated_mode(cli_flag: bool) -> bool:
+    """cli_flag(--integrated)가 있으면 True.
+    없으면 tooling.ini의 [output] mode 값을 읽는다.
+    ini에 항목이 없으면 False (standalone).
+    """
+    if cli_flag:
+        return True
+    config = _read_config()
+    raw = config.get("output", "mode", fallback="").strip().lower()
+    return raw == "integrated"
+
+
 def output_root(mod_id: str, mod_name: str, integrated: bool) -> Path:
     """Return the localisation/korean output root for a mod.
 

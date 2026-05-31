@@ -30,7 +30,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import translation_keys_root_arg, workshop_root as configured_workshop_root, output_root, ensure_standalone_mod
+from tool_config import translation_keys_root_arg, workshop_root as configured_workshop_root, output_root, ensure_standalone_mod, is_integrated_mode
 
 
 STELLARIS_APP_ID = "281990"
@@ -823,7 +823,7 @@ def plan_mod(
             str(workshop_root),
             "--dry-run",
             "--output-root",
-            str(output_root(mod["mod_id"], mod["name"], getattr(args, "integrated", False))),
+            str(output_root(mod["mod_id"], mod["name"], is_integrated_mode(args.integrated))),
         ]
         translation_result = run_tool(export_cmd)
         translation_counts = parse_stdout_counts(str(translation_result["stdout"]))
@@ -976,7 +976,7 @@ def build_commands(
             commands.append(skip_step("validate_auto_key_tokens", "openai_api_key.txt not found"))
 
     if not args.skip_translation:
-        integrated = getattr(args, "integrated", False)
+        integrated = is_integrated_mode(args.integrated)
         if not integrated:
             ensure_standalone_mod(mod["mod_id"], mod["name"])
         translation_cmd = [
