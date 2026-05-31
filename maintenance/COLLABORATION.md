@@ -189,8 +189,8 @@ Gigastructural Engineering의 `gc_kilo` 등 색상 마커 키에 `​`가 포함
 ## 7. 환경 요구사항
 
 - Python 3.10 이상 (3.12 권장)
-- `pip install openai>=1.0.0`
-- OpenAI API 키: `tools/openai_api_key.txt`
+- `pip install -r tools/requirements.txt`
+- API 키: `tools/api_key.txt` (prefix `sk-ant-` → Claude, `sk-` → OpenAI)
 - Steam 워크샵: `D:\Program Files (x86)\Steam\steamapps\workshop\content\281990`
 - 공식 번역: `D:\Program Files (x86)\Steam\steamapps\common\Stellaris\localisation\`
 

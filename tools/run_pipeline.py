@@ -34,6 +34,9 @@ from tool_config import translation_keys_root_arg, workshop_root as configured_w
 
 
 STELLARIS_APP_ID = "281990"
+# 캐시 포맷이 바뀌면 이 값을 올린다 (캐시 자동 무효화).
+# 올려야 하는 경우: mod state JSON 구조 변경, slug 생성 방식 변경,
+#   extraction 결과 포맷 변경 등 기존 캐시가 잘못된 skip 판단을 낼 수 있을 때.
 CACHE_VERSION = 1
 PACK_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_ROOT = PACK_ROOT / "tools"
@@ -941,7 +944,11 @@ def build_commands(
 
     if args.translate:
         api_key_file = TOOLS_ROOT / "api_key.txt"
-        if api_key_file.is_file():
+        _has_env_key = bool(
+            os.environ.get("ANTHROPIC_API_KEY", "").strip()
+            or os.environ.get("OPENAI_API_KEY", "").strip()
+        )
+        if api_key_file.is_file() or _has_env_key:
             commands.append(
                 command_step(
                     "translate_keys",

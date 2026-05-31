@@ -26,12 +26,24 @@ def pack_path(raw: str | Path) -> Path:
     return path if path.is_absolute() else PACK_ROOT / path
 
 
-def translation_keys_root() -> Path:
+def translation_keys_root(validate: bool = False) -> Path:
+    """Return the translation keys root directory.
+
+    validate=True のとき、パスが存在しなければ SystemExit を送出する。
+    パイプライン起動時など、早期に失敗させたい場合に使う。
+    """
     raw = os.environ.get(TRANSLATION_KEYS_ENV, "").strip()
     if not raw:
         config = _read_config()
         raw = config.get("paths", "translation_keys", fallback=DEFAULT_TRANSLATION_KEYS).strip()
-    return pack_path(raw or DEFAULT_TRANSLATION_KEYS)
+    path = pack_path(raw or DEFAULT_TRANSLATION_KEYS)
+    if validate and not path.is_dir():
+        raise SystemExit(
+            f"translation_keys 디렉토리를 찾을 수 없습니다: {path}\n"
+            f"tooling.ini의 [paths] translation_keys 또는 "
+            f"{TRANSLATION_KEYS_ENV} 환경 변수를 확인하세요."
+        )
+    return path
 
 
 def translation_keys_root_arg() -> str:

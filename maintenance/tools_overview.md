@@ -169,7 +169,7 @@ AI 자동번역까지 포함하려면 `--translate`를 명시한다.
 | `--dry-run` | CSV/YML 쓰기 방지: 키 추출은 skip, 참고 임포트/AI 번역/export는 dry-run으로 강제 |
 | `--translate` | 참고 번역 뒤 `translate_keys.py --workers 1 --tpm-limit 2000000` 실행, 이후 `validate_auto_key_tokens.py` 자동 실행 |
 
-`--translate`는 `tools/openai_api_key.txt`가 있을 때만 실행된다. 키 파일이 없으면 해당 모드의 `translate_keys`와 `validate_auto_key_tokens` 단계는 skip 처리되고 경고를 출력한다.
+`--translate`는 `tools/api_key.txt` 파일 또는 `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` 환경 변수 중 하나가 있을 때 실행된다. 모두 없으면 해당 모드의 `translate_keys`와 `validate_auto_key_tokens` 단계는 skip 처리되고 경고를 출력한다.
 
 예:
 
@@ -387,16 +387,4 @@ API 호출 없이 전체 모드 토큰 마스킹 드라이런 검증을 실행�
 ```powershell
 python tools/test_token_masking.py
 python tools/test_token_masking.py --mod <mod_slug>__<workshop_id>
-```
-
----
-
-## run_review_utf8.cmd
-
-UTF-8 환경에서 검수 관련 도구를 한 번에 실행하는 배치 스크립트.
-
-```powershell
-.\tools\run_review_utf8.cmd -Mod <mod_slug>__<workshop_id>
-.\tools\run_review_utf8.cmd -FixQuotes -Mod <mod_slug>__<workshop_id>
-.\tools\run_review_utf8.cmd -All
 ```
