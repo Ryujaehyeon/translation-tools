@@ -1018,6 +1018,8 @@ def build_commands(
                 str(workshop_root),
                 "--report-dir",
                 "maintenance/reports/validation",
+                "--output-root",
+                str(output_root(mod["mod_id"], mod["name"], integrated)),
                 ],
             )
         )

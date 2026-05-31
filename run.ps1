@@ -47,6 +47,8 @@ param(
     [string]$FromWorklist,
     [string]$Mode = "report",
     [int]$Workers = 3,
+    # TPM 기본값 2,000,000은 OpenAI Tier 2 기준.
+    # Anthropic 무료 티어는 100,000이므로 Claude 키 사용 시 --Tpm 100000 으로 낮출 것.
     [int]$Tpm = 2000000,
     [int]$Start = 0,
     [string]$End = "",

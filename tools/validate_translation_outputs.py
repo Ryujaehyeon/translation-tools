@@ -24,9 +24,11 @@ from datetime import datetime
 from pathlib import Path
 
 
-DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
+from tool_config import workshop_root as _configured_workshop_root, PACK_ROOT as _TOOL_CONFIG_PACK_ROOT
+
+DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 TOOL_ROOT = Path(__file__).resolve().parents[1]
-PACK_ROOT = Path(__file__).resolve().parents[2] / "integrated_korean_translation_pack"
+PACK_ROOT = _TOOL_CONFIG_PACK_ROOT.parent / "integrated_korean_translation_pack"
 ENTRY_RE = re.compile(r"^(\s*)([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
 HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 
@@ -50,6 +52,11 @@ def parse_args() -> argparse.Namespace:
         "--report-dir",
         default="maintenance/reports/validation",
         help="Directory for validation outputs. Relative paths are resolved from the translation pack root.",
+    )
+    parser.add_argument(
+        "--output-root",
+        default=None,
+        help="Override the localisation/korean directory to validate against. Relative paths resolved from pack root.",
     )
     return parser.parse_args()
 
@@ -276,7 +283,10 @@ def main() -> int:
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     mod_root = Path(args.workshop_root) / args.mod_id
     csv_root = resolve_pack_path(args.csv_dir)
-    korean_root = PACK_ROOT / "localisation" / "korean"
+    if args.output_root:
+        korean_root = resolve_pack_path(args.output_root)
+    else:
+        korean_root = PACK_ROOT / "localisation" / "korean"
     report_root = resolve_pack_path(args.report_dir)
 
     if not (mod_root / "localisation").is_dir():

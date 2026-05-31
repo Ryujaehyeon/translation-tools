@@ -32,8 +32,9 @@ from datetime import datetime
 from pathlib import Path
 
 
-DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
-PACK_ROOT = Path(__file__).resolve().parents[1]
+from tool_config import workshop_root as _configured_workshop_root, PACK_ROOT
+
+DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 ENTRY_RE = re.compile(r"^\s*([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
 HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 

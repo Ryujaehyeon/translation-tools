@@ -1350,7 +1350,7 @@ def process_csv_file(
             result.skipped_empty_english += 1
             continue
         if only_suspicious and not (is_suspicious_translation(eng.inner, kor.inner) or kor.quote_noise):
-            result.skipped_existing += 1
+            result.skipped_existing += 1  # suspicious 아닌 기존 번역 skip (skipped_existing에 합산)
             continue
         if should_stop(total_changed_so_far + changed_this_file, limit_rows):
             continue

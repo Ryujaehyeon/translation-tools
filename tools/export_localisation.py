@@ -26,9 +26,12 @@ from datetime import datetime
 from pathlib import Path
 
 
-DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
+from tool_config import workshop_root as _configured_workshop_root, PACK_ROOT as _TOOL_CONFIG_PACK_ROOT
+
+DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 TOOL_ROOT = Path(__file__).resolve().parents[1]
-PACK_ROOT = Path(__file__).resolve().parents[2] / "integrated_korean_translation_pack"
+# PACK_ROOT: --output-root 미지정 시 폴백. tool_config 기준으로 통일
+PACK_ROOT = _TOOL_CONFIG_PACK_ROOT.parent / "integrated_korean_translation_pack"
 ENTRY_RE = re.compile(r"^(\s*)([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
 HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 
@@ -85,13 +88,18 @@ def resolve_pack_path(raw: str) -> Path:
 
 
 def english_source_root(mod_root: Path) -> Path:
-    """Return the English localisation root for both Stellaris mod layouts."""
+    """Return the English localisation root for both Stellaris mod layouts.
+
+    반환값이 실제로 존재하지 않을 수 있다 (처리 대상 파일이 없는 경우).
+    호출자는 반환 경로 존재 여부를 확인해야 한다.
+    """
     localisation_root = mod_root / "localisation"
     nested_root = localisation_root / "english"
     if nested_root.is_dir():
         return nested_root
     if localisation_root.is_dir() and any(localisation_root.glob("*_l_english.yml")):
         return localisation_root
+    # 어느 레이아웃도 아닌 경우 nested 경로를 반환 (존재하지 않을 수 있음)
     return nested_root
 
 
