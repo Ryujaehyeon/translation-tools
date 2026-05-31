@@ -42,7 +42,6 @@ REPORT_DIR = PACK_ROOT / "maintenance" / "reports" / "ai_translation"
 BACKUP_ROOT = PACK_ROOT / "maintenance" / "backups" / "translate_keys"
 LOCK_FILE_PATH = PACK_ROOT / "maintenance" / "ai_current_task.txt"
 DEFAULT_API_KEY_FILE = SCRIPT_DIR / "api_key.txt"
-_LEGACY_API_KEY_FILE = SCRIPT_DIR / "openai_api_key.txt"  # 하위호환 폴백
 DEFAULT_GUIDELINES_FILE = PACK_ROOT / "maintenance" / "translation_guidelines.md"
 DEFAULT_GLOSSARY_FILE = PACK_ROOT / "maintenance" / "term_glossary.csv"
 
@@ -882,13 +881,12 @@ class APIKeyManager:
             env_key = os.environ.get(env_var, "").strip()
             if env_key:
                 return env_key
-        # 2순위: api_key.txt → openai_api_key.txt (하위호환)
-        for candidate in (self.api_key_file, _LEGACY_API_KEY_FILE):
-            if candidate.is_file():
-                for line in candidate.read_text(encoding="utf-8").splitlines():
-                    stripped = line.strip()
-                    if stripped and not stripped.startswith("#"):
-                        return stripped
+        # 2순위: tools/api_key.txt
+        if self.api_key_file.is_file():
+            for line in self.api_key_file.read_text(encoding="utf-8").splitlines():
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#"):
+                    return stripped
         raise ValueError(
             "API 키가 없습니다. ANTHROPIC_API_KEY / OPENAI_API_KEY 환경 변수 또는 "
             "tools/api_key.txt에 키를 설정하세요."
