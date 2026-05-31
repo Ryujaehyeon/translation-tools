@@ -253,7 +253,60 @@ gh issue close <N> --comment "해결: <수정 내용> (commit <hash>)"
 
 ---
 
-## 9. 참조 문서
+## 9. 릴리즈 절차
+
+번역 팩 업데이트 시 아래 흐름으로 릴리즈를 만든다.
+
+레포:
+
+- 번역 팩: [integrated_korean_translation_pack](https://github.com/Ryujaehyeon/integrated_korean_translation_pack)
+- 번역 도구: [translation-tools](https://github.com/Ryujaehyeon/translation-tools)
+
+### 9-1. 통합팩 릴리즈
+
+```powershell
+# 1. 번역 팩 변경사항 커밋·push
+cd "integrated_korean_translation_pack"
+git add .
+git commit -m "vX.Y.Z — 변경 내용 요약"
+git push
+
+# 2. 통합 zip 생성 (git, .gitignore, README 제외)
+Compress-Archive -Path common,fonts,interface,localisation,descriptor.mod `
+  -DestinationPath ..\integrated_korean_translation_pack_vX.Y.Z.zip -Force
+
+# 3. 릴리즈 생성
+gh release create vX.Y.Z ..\integrated_korean_translation_pack_vX.Y.Z.zip `
+  --title "vX.Y.Z — 변경 요약" --notes "변경 내용"
+```
+
+### 9-2. 개별 모드 zip 추가 (선택)
+
+특정 모드만 원하는 사용자를 위해 개별 zip을 릴리즈에 함께 첨부한다.
+
+```powershell
+# standalone 모드로 개별 폴더 생성
+cd translation-tools
+python tools/run_pipeline.py --mode apply --mod-ids <workshop_id>
+# → mod/<slug>__<id>_korean/ 폴더 생성됨
+
+# zip 압축
+Compress-Archive -Path ..\<slug>__<id>_korean `
+  -DestinationPath ..\<slug>_vX.Y.Z.zip -Force
+
+# 기존 릴리즈에 zip 추가
+gh release upload vX.Y.Z ..\<slug>_vX.Y.Z.zip
+```
+
+### 9-3. 릴리즈 노트 작성 기준
+
+- 추가된 모드 번역 목록
+- 수정된 번역 내용 (버그 수정, 용어 통일 등)
+- 설치 방법 (초기 릴리즈 이후 변경 없으면 생략 가능)
+
+---
+
+## 10. 참조 문서
 
 | 문서 | 내용 |
 |---|---|
@@ -264,7 +317,7 @@ gh issue close <N> --comment "해결: <수정 내용> (commit <hash>)"
 
 ---
 
-## 9. 작업 이력
+## 11. 작업 이력
 
 | 날짜 | 작업 내용 |
 |---|---|
