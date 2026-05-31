@@ -26,7 +26,12 @@ from datetime import datetime
 from pathlib import Path
 
 
-from tool_config import workshop_root as _configured_workshop_root, PACK_ROOT as _TOOL_CONFIG_PACK_ROOT
+from tool_config import (
+    workshop_root as _configured_workshop_root,
+    PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
+    resolve_pack_path,
+    english_source_root,
+)
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 TOOL_ROOT = Path(__file__).resolve().parents[1]
@@ -79,28 +84,6 @@ def write_text(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8-sig", newline="\n")
 
 
-def resolve_pack_path(raw: str) -> Path:
-    """Resolve a path relative to the translation pack root."""
-    path = Path(raw)
-    if path.is_absolute():
-        return path
-    return TOOL_ROOT / path
-
-
-def english_source_root(mod_root: Path) -> Path:
-    """Return the English localisation root for both Stellaris mod layouts.
-
-    반환값이 실제로 존재하지 않을 수 있다 (처리 대상 파일이 없는 경우).
-    호출자는 반환 경로 존재 여부를 확인해야 한다.
-    """
-    localisation_root = mod_root / "localisation"
-    nested_root = localisation_root / "english"
-    if nested_root.is_dir():
-        return nested_root
-    if localisation_root.is_dir() and any(localisation_root.glob("*_l_english.yml")):
-        return localisation_root
-    # 어느 레이아웃도 아닌 경우 nested 경로를 반환 (존재하지 않을 수 있음)
-    return nested_root
 
 
 def parse_entries(path: Path) -> dict[str, str]:

@@ -87,6 +87,36 @@ def output_root(mod_id: str, mod_name: str, integrated: bool) -> Path:
     return PACK_ROOT.parent / folder_name / "localisation" / "korean"
 
 
+def resolve_pack_path(raw: str | Path) -> Path:
+    """Relative 경로는 PACK_ROOT 기준으로, 절대 경로는 그대로 반환."""
+    path = Path(raw)
+    return path if path.is_absolute() else PACK_ROOT / path
+
+
+def english_source_root(mod_root: Path) -> Path:
+    """모드의 English 로컬라이제이션 루트를 반환한다.
+
+    Stellaris 모드는 두 가지 레이아웃을 사용한다:
+      - localisation/english/
+      - localisation/*_l_english.yml (직접 배치)
+    replace 서브디렉토리도 동일하게 탐색한다.
+    반환값이 실제로 존재하지 않을 수 있다 — 호출자가 확인해야 한다.
+    """
+    localisation_root = mod_root / "localisation"
+    nested_root = localisation_root / "english"
+    if nested_root.is_dir():
+        return nested_root
+    if localisation_root.is_dir() and any(localisation_root.glob("*_l_english.yml")):
+        return localisation_root
+    replace_english = localisation_root / "replace" / "english"
+    if replace_english.is_dir():
+        return replace_english
+    replace_root = localisation_root / "replace"
+    if replace_root.is_dir() and any(replace_root.glob("*_l_english.yml")):
+        return replace_root
+    return nested_root
+
+
 def ensure_standalone_mod(mod_id: str, mod_name: str) -> Path:
     """Create a minimal Stellaris mod folder for a standalone Korean addon.
 

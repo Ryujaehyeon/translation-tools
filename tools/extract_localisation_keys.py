@@ -32,7 +32,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-from tool_config import workshop_root as _configured_workshop_root, PACK_ROOT
+from tool_config import workshop_root as _configured_workshop_root, PACK_ROOT, resolve_pack_path, english_source_root
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 ENTRY_RE = re.compile(r"^\s*([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
@@ -116,23 +116,6 @@ def output_path_for(source_file: Path, source_root: Path, output_root: Path, out
     return output_root / output_prefix / relative.parent / stem
 
 
-def resolve_pack_path(raw: str) -> Path:
-    """Resolve relative paths from the translation pack root."""
-    path = Path(raw)
-    if path.is_absolute():
-        return path
-    return PACK_ROOT / path
-
-
-def english_source_root(mod_root: Path) -> Path:
-    """Return the English localisation root for both Stellaris mod layouts."""
-    localisation_root = mod_root / "localisation"
-    nested_root = localisation_root / "english"
-    if nested_root.is_dir():
-        return nested_root
-    if localisation_root.is_dir() and any(localisation_root.glob("*_l_english.yml")):
-        return localisation_root
-    return nested_root
 
 
 def discover_english_sources(mod_root: Path) -> list[tuple[Path, Path, Path]]:

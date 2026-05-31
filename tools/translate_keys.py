@@ -96,8 +96,9 @@ _TRANSLATABLE_WORD_RE = re.compile(r"[A-Za-z]{2,}")
 # 로마숫자만으로 구성된 단어는 번역 대상 아님
 _ROMAN_NUMERAL_RE = re.compile(r"^[IVXivx]+$")
 # 모델이 "번역:" 같은 접두어를 붙여 반환할 때 제거하기 위한 패턴
+# 모델이 "번역: ...", "Korean: ..." 처럼 접두어를 붙일 때 한 번에 제거하는 정규식
 PROMPT_LABEL_RE = re.compile(
-    r"^(?:korean_value|Korean|Translation|원문|번역|번역문|해석)\s*[:：]?\s*(?:\\n|\r\n|\r|\n)+",
+    r"^(?:korean_value|Korean|Translation|원문|번역|번역문|해석)\s*[:：]\s*",
     re.IGNORECASE,
 )
 
@@ -434,27 +435,12 @@ _CSV_ROW_RE = re.compile(r'^[A-Za-z0-9_.\-]+\s*,\s*.+?\s*,\s*(.+)$', re.DOTALL)
 
 def strip_prompt_echo(value: str) -> str:
     # 모델이 "번역: ...", "Korean: ..." 처럼 접두어를 붙여 반환할 때 제거
+    # PROMPT_LABEL_RE 한 번으로 처리 (루프 불필요)
     text = value.strip()
-    prompt_prefixes = (
-        "원문:",
-        "번역:",
-        "번역문:",
-        "korean_value:",
-        "Korean:",
-        "Translation:",
-        "해석:",
-    )
-    changed = True
-    while changed:
-        changed = False
-        label_cleaned = PROMPT_LABEL_RE.sub("", text).lstrip()
-        if label_cleaned != text:
-            text = label_cleaned
-            changed = True
-        for prefix in prompt_prefixes:
-            if text.startswith(prefix):
-                text = text[len(prefix) :].lstrip()
-                changed = True
+    prev = None
+    while prev != text:
+        prev = text
+        text = PROMPT_LABEL_RE.sub("", text).lstrip()
 
     # AI가 프롬프트 지시문을 번역문 앞에 그대로 포함해 반환한 경우 제거
     # 패턴: "__식별자__ 형태의 마커는 ... key: <키명>   실제 번역문"
@@ -1354,7 +1340,7 @@ def process_csv_file(
             result.skipped_existing += 1  # suspicious 아닌 기존 번역 skip (skipped_existing에 합산)
             continue
         if should_stop(total_changed_so_far + changed_this_file, limit_rows):
-            continue
+            break  # 한도 도달 — 이후 행 처리 불필요
         result.candidates += 1
         candidates.append((line_number, row, eng))
 

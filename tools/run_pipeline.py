@@ -30,7 +30,15 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import translation_keys_root_arg, workshop_root as configured_workshop_root, output_root, ensure_standalone_mod, is_integrated_mode
+from tool_config import (
+    translation_keys_root_arg,
+    workshop_root as configured_workshop_root,
+    output_root,
+    ensure_standalone_mod,
+    is_integrated_mode,
+    resolve_pack_path,
+    english_source_root,
+)
 
 
 STELLARIS_APP_ID = "281990"
@@ -179,14 +187,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def resolve_pack_path(raw: str) -> Path:
-    """Resolve a user path relative to the translation pack root."""
-    path = Path(raw)
-    if path.is_absolute():
-        return path
-    return PACK_ROOT / path
-
-
 def resolve_workers(raw: str, apply_translations: bool) -> int:
     """Resolve --workers, keeping actual write mode conservative by default."""
     if str(raw).lower() == "auto":
@@ -297,23 +297,6 @@ def slugify(value: str) -> str:
     value = re.sub(r"[^a-z0-9]+", "_", value)
     value = re.sub(r"_+", "_", value).strip("_")
     return value or "mod"
-
-
-def english_source_root(mod_root: Path) -> Path:
-    """Return the English localisation root for both Stellaris mod layouts."""
-    localisation_root = mod_root / "localisation"
-    nested_root = localisation_root / "english"
-    if nested_root.is_dir():
-        return nested_root
-    if localisation_root.is_dir() and any(localisation_root.glob("*_l_english.yml")):
-        return localisation_root
-    replace_english = localisation_root / "replace" / "english"
-    if replace_english.is_dir():
-        return replace_english
-    replace_root = localisation_root / "replace"
-    if replace_root.is_dir() and any(replace_root.glob("*_l_english.yml")):
-        return replace_root
-    return nested_root
 
 
 def classify_mod_root(mod_root: Path) -> dict[str, object]:
