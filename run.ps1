@@ -67,7 +67,8 @@ param(
     [switch]$ImportRef,
     [switch]$Translate,
     [Alias("dry-run")]
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$Integrated
 )
 
 $ErrorActionPreference = "Stop"
@@ -328,7 +329,6 @@ function Write-WorkHint {
     param([string]$Target)
     if (-not $Target) { Write-Error "대상 workshop_id 또는 slug 필요"; exit 1 }
     $workshopId = Resolve-WorkshopId $Target
-    $slug = Resolve-ModSlug $Target -AllowComputed
     $keysDir = Resolve-TranslationKeysDir $Target
     $stats = Get-KeyStats $keysDir
     Write-ModStatus $Target
@@ -449,9 +449,10 @@ switch ($Action) {
     "pipeline" {
         $pyArgs = @("--mode", $Mode)
         $pyArgs += Get-ModArgs
-        if ($ImportRef) { $pyArgs += "--import-korean-references" }
-        if ($Translate) { $pyArgs += "--translate" }
-        if ($DryRun)    { $pyArgs += "--dry-run" }
+        if ($ImportRef)  { $pyArgs += "--import-korean-references" }
+        if ($Translate)  { $pyArgs += "--translate" }
+        if ($DryRun)     { $pyArgs += "--dry-run" }
+        if ($Integrated) { $pyArgs += "--integrated" }
         py "run_pipeline.py" $pyArgs
     }
 

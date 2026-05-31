@@ -30,7 +30,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import translation_keys_root_arg, workshop_root as configured_workshop_root
+from tool_config import translation_keys_root_arg, workshop_root as configured_workshop_root, output_root, ensure_standalone_mod
 
 
 STELLARIS_APP_ID = "281990"
@@ -164,6 +164,14 @@ def parse_args() -> argparse.Namespace:
         "--force",
         action="store_true",
         help="Ignore cache and rerun every enabled step.",
+    )
+    parser.add_argument(
+        "--integrated",
+        action="store_true",
+        help=(
+            "Write all output into a single integrated_korean_translation_pack folder. "
+            "Without this flag each mod gets its own standalone addon folder."
+        ),
     )
     return parser.parse_args()
 
@@ -806,17 +814,18 @@ def plan_mod(
     status = "ok"
 
     if extract_result["returncode"] == 0:
-        translation_result = run_tool(
-            [
-                sys.executable,
-                str(export_localisation),
-                mod["mod_id"],
-                keys_dir_arg,
-                "--workshop-root",
-                str(workshop_root),
-                "--dry-run",
-            ]
-        )
+        export_cmd = [
+            sys.executable,
+            str(export_localisation),
+            mod["mod_id"],
+            keys_dir_arg,
+            "--workshop-root",
+            str(workshop_root),
+            "--dry-run",
+            "--output-root",
+            str(output_root(mod["mod_id"], mod["name"], getattr(args, "integrated", False))),
+        ]
+        translation_result = run_tool(export_cmd)
         translation_counts = parse_stdout_counts(str(translation_result["stdout"]))
         if translation_result["returncode"] != 0:
             status = "translation_failed"
@@ -967,6 +976,9 @@ def build_commands(
             commands.append(skip_step("validate_auto_key_tokens", "openai_api_key.txt not found"))
 
     if not args.skip_translation:
+        integrated = getattr(args, "integrated", False)
+        if not integrated:
+            ensure_standalone_mod(mod["mod_id"], mod["name"])
         translation_cmd = [
             sys.executable,
             str(export_localisation),
@@ -974,6 +986,8 @@ def build_commands(
             keys_dir_arg,
             "--workshop-root",
             str(workshop_root),
+            "--output-root",
+            str(output_root(mod["mod_id"], mod["name"], integrated)),
         ]
         if not args.apply_translations or args.dry_run:
             translation_cmd.append("--dry-run")

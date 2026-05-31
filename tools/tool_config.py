@@ -48,3 +48,40 @@ def workshop_root() -> Path:
         config = _read_config()
         raw = config.get("paths", "workshop_root", fallback=DEFAULT_WORKSHOP_ROOT).strip()
     return Path(raw or DEFAULT_WORKSHOP_ROOT)
+
+
+def output_root(mod_id: str, mod_name: str, integrated: bool) -> Path:
+    """Return the localisation/korean output root for a mod.
+
+    integrated=True  → shared integrated_korean_translation_pack folder
+    integrated=False → per-mod folder named "<slug>__<mod_id>_korean" next to translation-tools
+    """
+    if integrated:
+        return PACK_ROOT.parent / "integrated_korean_translation_pack" / "localisation" / "korean"
+    slug = "".join(c if c.isalnum() else "_" for c in mod_name.lower()).strip("_")
+    folder_name = f"{slug}__{mod_id}_korean"
+    return PACK_ROOT.parent / folder_name / "localisation" / "korean"
+
+
+def ensure_standalone_mod(mod_id: str, mod_name: str) -> Path:
+    """Create a minimal Stellaris mod folder for a standalone Korean addon.
+
+    Returns the mod root (parent of localisation/).
+    Skips descriptor.mod creation if it already exists.
+    """
+    slug = "".join(c if c.isalnum() else "_" for c in mod_name.lower()).strip("_")
+    folder_name = f"{slug}__{mod_id}_korean"
+    mod_root = PACK_ROOT.parent / folder_name
+    descriptor = mod_root / "descriptor.mod"
+    if not descriptor.is_file():
+        mod_root.mkdir(parents=True, exist_ok=True)
+        kr_name = f"{mod_name} KR"
+        descriptor.write_text(
+            f'version="1.0"\n'
+            f'tags={{\n    "Translation"\n    "Localisation"\n}}\n'
+            f'name="{kr_name}"\n'
+            f'supported_version="*"\n'
+            f'path="mod/{folder_name}"\n',
+            encoding="utf-8",
+        )
+    return mod_root

@@ -53,6 +53,15 @@ def parse_args() -> argparse.Namespace:
         default=str(DEFAULT_WORKSHOP_ROOT),
         help=f"Workshop content root. Default: {DEFAULT_WORKSHOP_ROOT}",
     )
+    parser.add_argument(
+        "--output-root",
+        default=None,
+        help=(
+            "Override the localisation/korean output directory. "
+            "Relative paths are resolved from the translation pack root. "
+            "Defaults to integrated_korean_translation_pack/localisation/korean."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -280,7 +289,10 @@ def main() -> int:
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     mod_root = Path(args.workshop_root) / args.mod_id
     csv_root = resolve_pack_path(args.csv_dir)
-    korean_root = PACK_ROOT / "localisation" / "korean"
+    if args.output_root:
+        korean_root = resolve_pack_path(args.output_root)
+    else:
+        korean_root = PACK_ROOT / "localisation" / "korean"
     reports_root = TOOL_ROOT / "maintenance" / "reports" / "translation"
     backup_root = TOOL_ROOT / "maintenance" / "backups" / f"export_localisation_{timestamp}"
 
