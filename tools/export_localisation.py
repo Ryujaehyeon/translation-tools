@@ -296,7 +296,11 @@ def main() -> int:
     if not csv_root.is_dir():
         raise SystemExit(f"CSV directory not found: {csv_root}")
     if not korean_root.is_dir():
-        raise SystemExit(f"Korean localisation directory not found: {korean_root}")
+        if args.output_root:
+            # --output-root 지정 시 standalone 모드 — 폴더 자동 생성
+            korean_root.mkdir(parents=True, exist_ok=True)
+        else:
+            raise SystemExit(f"Korean localisation directory not found: {korean_root}")
 
     translations, global_conflicts = build_translation_index(korean_root)
     csv_files = sorted(csv_root.rglob("*_key.csv"))
