@@ -47,9 +47,10 @@ param(
     [string]$FromWorklist,
     [string]$Mode = "report",
     [int]$Workers = 3,
-    # TPM 기본값 2,000,000은 OpenAI Tier 2 기준.
-    # Anthropic 무료 티어는 100,000이므로 Claude 키 사용 시 --Tpm 100000 으로 낮출 것.
-    [int]$Tpm = 2000000,
+    # 기본값은 tooling.ini [translation] tpm_limit 에서 읽음.
+    # ini 항목이 없으면 100,000 (Anthropic 무료 티어 기준, 안전한 하한).
+    # OpenAI Tier 2는 2,000,000이므로 필요 시 ini에서 올릴 것.
+    [int]$Tpm = 100000,
     [int]$Start = 0,
     [string]$End = "",
     [switch]$Rewrite,
@@ -357,7 +358,7 @@ if (-not $PSBoundParameters.ContainsKey("Tpm")) {
     $Tpm = if ($env:STELLARIS_TRANSLATION_TPM_LIMIT) {
         [int]$env:STELLARIS_TRANSLATION_TPM_LIMIT
     } else {
-        Get-ToolConfigInt "translation" "tpm_limit" 2000000
+        Get-ToolConfigInt "translation" "tpm_limit" 100000
     }
 }
 

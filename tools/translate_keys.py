@@ -319,12 +319,13 @@ def parse_args() -> argparse.Namespace:
         help="Number of parallel translation requests. Default: 1. Recommended max: 3~5.",
     )
     # 분당 토큰(TPM) 한도. 이 값에 맞춰 요청 속도를 자동 조절
-    # OpenAI Tier 1: 200,000 / Tier 2: 2,000,000. 0이면 throttle 비활성화
+    # 기본 100,000은 Anthropic 무료 티어 기준 (안전한 하한).
+    # OpenAI Tier 1: 200,000 / Tier 2: 2,000,000. 0이면 throttle 비활성화.
     parser.add_argument(
         "--tpm-limit",
         type=int,
-        default=200000,
-        help="OpenAI TPM(분당 토큰) 한도. Default: 200000. 0이면 throttle 비활성화.",
+        default=100000,
+        help="TPM(분당 토큰) 한도. Default: 100000 (Anthropic 무료 티어 기준). 0이면 throttle 비활성화.",
     )
     return parser.parse_args()
 
