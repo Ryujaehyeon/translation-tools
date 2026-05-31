@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: 문법 검사
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        run: pip install -r tools/requirements.txt
+
+      - name: 문법 오류 검사 (py_compile)
+        run: python -m py_compile tools/*.py
+
+      - name: 모든 툴 import 확인
+        run: |
+          cd tools
+          python -c "
+          import tool_config
+          import export_localisation
+          import extract_localisation_keys
+          import validate_translation_outputs
+          import translate_keys
+          import run_pipeline
+          print('All imports OK')
+          "
+
+      - name: 파이프라인 실행 가능 여부 확인
+        run: python tools/run_pipeline.py --mode scan
+        env:
+          STELLARIS_WORKSHOP_ROOT: /nonexistent
