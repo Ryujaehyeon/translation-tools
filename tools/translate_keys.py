@@ -46,8 +46,8 @@ _LEGACY_API_KEY_FILE = SCRIPT_DIR / "openai_api_key.txt"  # 하위호환 폴백
 DEFAULT_GUIDELINES_FILE = PACK_ROOT / "maintenance" / "translation_guidelines.md"
 DEFAULT_GLOSSARY_FILE = PACK_ROOT / "maintenance" / "term_glossary.csv"
 
-# 기본 모델: claude-haiku-4-5 (비용·품질 균형 최적)
-DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+# 기본 모델: gpt-4o-mini (가장 저렴한 모델로 설정)
+DEFAULT_MODEL = "gpt-4o-mini"
 # 온도: 0.0=완전 결정론, 1.0=창의적. 번역은 0.1~0.3이 적합 (일관성 우선)
 DEFAULT_TEMPERATURE = 0.2
 # API 실패 시 최대 재시도 횟수 (지수 대기 적용)
@@ -147,8 +147,8 @@ def console_text(value: object) -> str:
 
 @dataclass
 class TranslationConfig:
-    # 모델명. Claude: claude-haiku-4-5-20251001, claude-sonnet-4-6 등
-    #        OpenAI: gpt-4o-mini, gpt-4.1-mini 등
+    # 모델명. OpenAI: gpt-4o-mini, gpt-4.1-mini 등
+    #        Claude: claude-haiku-4-5-20251001, claude-sonnet-4-6 등
     model: str = DEFAULT_MODEL
     # 번역 온도 (0.0~1.0): 낮을수록 결정론적, 번역에는 0.1~0.3 권장
     temperature: float = DEFAULT_TEMPERATURE

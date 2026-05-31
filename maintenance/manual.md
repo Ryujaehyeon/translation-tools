@@ -43,7 +43,7 @@ tools/api_key.txt   # 파일 내용: API 키 문자열만 (주석은 # 으로 �
 지원 provider:
 
 - `sk-ant-...` → Anthropic (Claude) — 기본 모델: `claude-haiku-4-5-20251001`
-- `sk-...`     → OpenAI             — 기본 모델: `gpt-4o-mini`
+- `sk-...`     → OpenAI             — 기본 모델: `gpt-4o-mini` (기본값, 가장 저렴)
 
 환경 변수로도 설정 가능: `ANTHROPIC_API_KEY` 또는 `OPENAI_API_KEY`
 
