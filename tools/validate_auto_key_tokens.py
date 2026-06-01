@@ -38,6 +38,9 @@ TOKEN_PATTERNS = {
     "escaped_newline": re.compile(r"\\n"),
 }
 
+# \u00a7(U+00A7) \ub300\uc2e0 \uc4f0\uc774\ub294 \uc720\uc0ac \uc720\ub2c8\ucf54\ub4dc \ubb38\uc790 \u2014 AI \ubc88\uc5ed \uacb0\uacfc \uc624\uc5fc \uac10\uc9c0\uc6a9
+SECTION_SIGN_LOOKALIKE_RE = re.compile(r"[\u223d\u2248\uff5e\u223c][A-Za-z!_]")
+
 HARD_TOKEN_TYPES = ("dollar_ref", "icon", "bracket_expr")
 STYLE_TOKEN_TYPES = ("color_code", "escaped_newline")
 
@@ -333,6 +336,28 @@ def validate(auto_keys_dir: Path, mods: set[str]) -> tuple[list[TokenIssue], lis
                     summary["quote_issue_rows"] = int(summary["quote_issue_rows"]) + 1
                     file_stats[file_key]["quote_rows"] = int(file_stats[file_key]["quote_rows"]) + 1
                     mod_stats[mod]["quote_rows"] = int(mod_stats[mod]["quote_rows"]) + 1
+
+                # §(U+00A7) 유사 문자 오염 감지 — AI가 §를 ∽ 등으로 대체한 경우
+                if SECTION_SIGN_LOOKALIKE_RE.search(korean_value):
+                    issues.append(TokenIssue(
+                        mod=mod,
+                        file=file_inside_mod,
+                        line_number=line_number,
+                        key=key,
+                        issue_type="section_sign_corruption",
+                        severity="critical",
+                        english_value=english_value,
+                        korean_value=korean_value,
+                        missing=[],
+                        extra=[],
+                    ))
+                    summary["critical_rows"] = int(summary["critical_rows"]) + 1
+                    summary["issue_rows"] = int(summary["issue_rows"]) + 1
+                    summary["issues_by_type"]["section_sign_corruption"] += 1
+                    summary["issues_by_mod"][mod] += 1
+                    summary["critical_by_mod"][mod] += 1
+                    file_stats[file_key]["critical_rows"] = int(file_stats[file_key]["critical_rows"]) + 1
+                    mod_stats[mod]["critical_rows"] = int(mod_stats[mod]["critical_rows"]) + 1
 
                 if not korean_value.strip():
                     continue

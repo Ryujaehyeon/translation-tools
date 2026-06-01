@@ -462,12 +462,25 @@ def strip_prompt_echo(value: str) -> str:
             print(f"  [경고] CSV 형식 응답 감지, korean_value만 추출: {console_text(extracted)}")
             text = extracted
 
+    # §(U+00A7) 색상코드 오염 교정
+    # AI가 §를 유사 유니코드 문자(∽ U+223D 등)로 대체하는 경우 복원
+    text = fix_section_sign_corruption(text)
+
     # 따옴표 불균형 감지 및 보정
     # CSV 셀은 따옴표로 감싸거나(짝수) 감싸지 않아야 함
     # 예: `"""엔지니어 드론"` → 앞 3개, 뒤 1개 → 불균형
     text = clean_quote_noise(text)
 
     return text
+
+
+# §(U+00A7) 대신 쓰이는 유사 유니코드 문자 패턴
+_SECTION_SIGN_LOOKALIKE_RE = re.compile(r"[∽≈～∼](?=[A-Za-z!_])")
+
+
+def fix_section_sign_corruption(text: str) -> str:
+    """AI가 §(U+00A7)를 ∽(U+223D) 등 유사 문자로 대체한 경우 복원."""
+    return _SECTION_SIGN_LOOKALIKE_RE.sub("§", text)
 
 
 def has_quote_noise(text: str) -> bool:
