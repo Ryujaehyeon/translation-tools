@@ -344,12 +344,18 @@ def validate(auto_keys_dir: Path, mods: set[str]) -> tuple[list[TokenIssue], lis
                         file=file_inside_mod,
                         line_number=line_number,
                         key=key,
-                        issue_type="section_sign_corruption",
                         severity="critical",
+                        priority=SEVERITY_PRIORITY["critical"],
+                        issue_types=["section_sign_corruption"],
+                        hard_missing={},
+                        hard_extra={},
+                        hard_order_only={},
+                        style_missing={},
+                        style_extra={},
+                        english_tokens={},
+                        korean_tokens={},
                         english_value=english_value,
                         korean_value=korean_value,
-                        missing=[],
-                        extra=[],
                     ))
                     summary["critical_rows"] = int(summary["critical_rows"]) + 1
                     summary["issue_rows"] = int(summary["issue_rows"]) + 1

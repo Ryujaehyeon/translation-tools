@@ -430,6 +430,15 @@ class CsvCell:
 # AI가 CSV 형식으로 응답할 때 감지하는 패턴
 # 예: "job_u_engineer_drone,Engineer Drone,엔지니어 드론"
 # key 부분은 영숫자·_·- 로만 구성, 쉼표로 구분된 3열 구조
+# §(U+00A7) 대신 쓰이는 유사 유니코드 문자 패턴
+_SECTION_SIGN_LOOKALIKE_RE = re.compile(r"[∽≈～∼](?=[A-Za-z!_])")
+
+
+def fix_section_sign_corruption(text: str) -> str:
+    """AI가 §(U+00A7)를 ∽(U+223D) 등 유사 문자로 대체한 경우 복원."""
+    return _SECTION_SIGN_LOOKALIKE_RE.sub("§", text)
+
+
 _CSV_ROW_RE = re.compile(r'^[A-Za-z0-9_.\-]+\s*,\s*.+?\s*,\s*(.+)$', re.DOTALL)
 
 
@@ -472,15 +481,6 @@ def strip_prompt_echo(value: str) -> str:
     text = clean_quote_noise(text)
 
     return text
-
-
-# §(U+00A7) 대신 쓰이는 유사 유니코드 문자 패턴
-_SECTION_SIGN_LOOKALIKE_RE = re.compile(r"[∽≈～∼](?=[A-Za-z!_])")
-
-
-def fix_section_sign_corruption(text: str) -> str:
-    """AI가 §(U+00A7)를 ∽(U+223D) 등 유사 문자로 대체한 경우 복원."""
-    return _SECTION_SIGN_LOOKALIKE_RE.sub("§", text)
 
 
 def has_quote_noise(text: str) -> bool:
