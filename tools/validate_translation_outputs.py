@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Validate generated Korean localisation outputs and write fix-up worklists.
 
 This tool is read-only for localisation files. It checks whether the generated
@@ -23,12 +23,14 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-
+from tool_config import (
+    PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
+)
+from tool_config import (
+    resolve_pack_path,
+)
 from tool_config import (
     workshop_root as _configured_workshop_root,
-    PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
-    resolve_pack_path,
-    english_source_root,
 )
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
@@ -71,8 +73,6 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig")
 
 
-
-
 def discover_english_sources(mod_root: Path) -> list[tuple[Path, Path, Path]]:
     """Return source files with their root and CSV path prefix."""
     localisation_root = mod_root / "localisation"
@@ -87,7 +87,11 @@ def discover_english_sources(mod_root: Path) -> list[tuple[Path, Path, Path]]:
     for source_root, csv_prefix, recursive in candidates:
         if not source_root.is_dir():
             continue
-        files = sorted(source_root.rglob("*_l_english.yml") if recursive else source_root.glob("*_l_english.yml"))
+        files = sorted(
+            source_root.rglob("*_l_english.yml")
+            if recursive
+            else source_root.glob("*_l_english.yml")
+        )
         for source_file in files:
             resolved = source_file.resolve()
             if resolved in seen:
@@ -185,7 +189,9 @@ def read_keys(csv_path: Path) -> tuple[list[str], list[dict[str, object]]]:
     return keys, issues
 
 
-def csv_path_for(source_file: Path, source_root: Path, csv_root: Path, csv_prefix: Path = Path()) -> Path:
+def csv_path_for(
+    source_file: Path, source_root: Path, csv_root: Path, csv_prefix: Path = Path()
+) -> Path:
     """Map a source English yml file to its expected key CSV path."""
     relative = source_file.relative_to(source_root)
     name = relative.name
@@ -200,7 +206,11 @@ def source_path_for(csv_path: Path, csv_root: Path, mod_root: Path) -> Path:
     """Map a key CSV path back to its source English yml file."""
     relative = csv_path.relative_to(csv_root)
     name = relative.name
-    source_name = name[: -len("_key.csv")] + "_l_english.yml" if name.endswith("_key.csv") else relative.stem + "_l_english.yml"
+    source_name = (
+        name[: -len("_key.csv")] + "_l_english.yml"
+        if name.endswith("_key.csv")
+        else relative.stem + "_l_english.yml"
+    )
     localisation_root = mod_root / "localisation"
     if relative.parts and relative.parts[0] == "replace":
         rest = Path(*relative.parts[1:]).parent / source_name
@@ -290,7 +300,9 @@ def main() -> int:
 
     source_files = discover_english_sources(mod_root)
     csv_files = sorted(csv_root.rglob("*_key.csv"))
-    expected_csv_paths = {csv_path_for(path, root, csv_root, prefix) for path, root, prefix in source_files}
+    expected_csv_paths = {
+        csv_path_for(path, root, csv_root, prefix) for path, root, prefix in source_files
+    }
     actual_csv_paths = set(csv_files)
 
     format_issues: list[dict[str, object]] = []
@@ -298,8 +310,12 @@ def main() -> int:
     conflict_rows: list[dict[str, object]] = []
     extra_rows: list[dict[str, object]] = []
     missing_target_files: list[str] = []
-    missing_csv_files = sorted(str(path.relative_to(csv_root)) for path in expected_csv_paths - actual_csv_paths)
-    extra_csv_files = sorted(str(path.relative_to(csv_root)) for path in actual_csv_paths - expected_csv_paths)
+    missing_csv_files = sorted(
+        str(path.relative_to(csv_root)) for path in expected_csv_paths - actual_csv_paths
+    )
+    extra_csv_files = sorted(
+        str(path.relative_to(csv_root)) for path in actual_csv_paths - expected_csv_paths
+    )
 
     global_conflicts = build_korean_value_index(korean_root)
 

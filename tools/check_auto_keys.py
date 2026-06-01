@@ -5,12 +5,12 @@
     python tools/check_auto_keys.py --mod gigastructural_engineering_more_4_3__1121692237
     python tools/check_auto_keys.py --mod-id 1121692237
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
 import re
-import sys
 from pathlib import Path
 
 from tool_config import translation_keys_root
@@ -38,8 +38,17 @@ def get_mod_path(mod_id: str) -> Path | None:
 
 def parse_yml_keys(yml_path: Path) -> dict[str, str]:
     PATTERN = re.compile(r'^\s*([\w.\-]+):(?:\d+\s*|\s+)(".*)')
-    LANG_HEADERS = {"l_english", "l_korean", "l_french", "l_german",
-                    "l_spanish", "l_russian", "l_polish", "l_braz_por", "l_simp_chinese"}
+    LANG_HEADERS = {
+        "l_english",
+        "l_korean",
+        "l_french",
+        "l_german",
+        "l_spanish",
+        "l_russian",
+        "l_polish",
+        "l_braz_por",
+        "l_simp_chinese",
+    }
     result: dict[str, str] = {}
     try:
         for line in yml_path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
@@ -89,7 +98,7 @@ def check_mod(folder: str) -> None:
     missing_csv = sorted(set(yml_map) - set(csv_map))
     extra_csv = sorted(set(csv_map) - set(yml_map))
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"[모드] {folder}")
     print(f"  원본 YML: {len(yml_map)}개 / auto_keys CSV: {len(csv_map)}개")
 
@@ -105,9 +114,11 @@ def check_mod(folder: str) -> None:
 
         missing_keys = sorted(set(yml_keys) - set(csv_keys))
         extra_keys = sorted(set(csv_keys) - set(yml_keys))
-        value_mismatches = [(k, yml_keys[k], csv_keys[k])
-                            for k in set(csv_keys) & set(yml_keys)
-                            if csv_keys[k] != yml_keys[k]]
+        value_mismatches = [
+            (k, yml_keys[k], csv_keys[k])
+            for k in set(csv_keys) & set(yml_keys)
+            if csv_keys[k] != yml_keys[k]
+        ]
 
         if missing_keys or extra_keys or value_mismatches:
             total_key_errors += len(missing_keys) + len(extra_keys) + len(value_mismatches)
@@ -121,7 +132,7 @@ def check_mod(folder: str) -> None:
                 print(f"      YML: {yv}")
                 print(f"      CSV: {cv}")
             if len(value_mismatches) > 10:
-                print(f"    ... 외 {len(value_mismatches)-10}개 값 불일치")
+                print(f"    ... 외 {len(value_mismatches) - 10}개 값 불일치")
 
     if not missing_csv and not extra_csv and total_key_errors == 0:
         print(f"  [OK] 파일 {len(csv_map)}개, 키 일치")

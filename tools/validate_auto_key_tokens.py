@@ -24,7 +24,6 @@ from typing import Iterable
 
 from tool_config import translation_keys_root
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUTO_KEYS = translation_keys_root()
 DEFAULT_REPORT_DIR = ROOT / "maintenance" / "reports" / "token_validation"
@@ -57,12 +56,12 @@ class QuoteIssue:
     file: str
     line_number: int
     key: str
-    field: str          # 문제가 발생한 열 (english_value / korean_value)
-    issue_type: str     # "imbalance" | "missing"
-    leading: int        # 앞 따옴표 개수 (imbalance일 때만 의미 있음)
-    trailing: int       # 뒤 따옴표 개수 (imbalance일 때만 의미 있음)
+    field: str  # 문제가 발생한 열 (english_value / korean_value)
+    issue_type: str  # "imbalance" | "missing"
+    leading: int  # 앞 따옴표 개수 (imbalance일 때만 의미 있음)
+    trailing: int  # 뒤 따옴표 개수 (imbalance일 때만 의미 있음)
     english_value: str  # 원본 english_value (보정 참고용)
-    raw_value: str      # 문제가 있는 셀의 원본 값
+    raw_value: str  # 문제가 있는 셀의 원본 값
 
 
 @dataclass
@@ -181,7 +180,15 @@ def issue_action(severity: str) -> str:
 
 def classify_issue(
     english_tokens: dict[str, list[str]], korean_tokens: dict[str, list[str]]
-) -> tuple[str | None, list[str], dict[str, list[str]], dict[str, list[str]], dict[str, list[str]], dict[str, list[str]], dict[str, list[str]]]:
+) -> tuple[
+    str | None,
+    list[str],
+    dict[str, list[str]],
+    dict[str, list[str]],
+    dict[str, list[str]],
+    dict[str, list[str]],
+    dict[str, list[str]],
+]:
     issue_types: list[str] = []
     hard_missing: dict[str, list[str]] = {}
     hard_extra: dict[str, list[str]] = {}
@@ -213,11 +220,35 @@ def classify_issue(
             style_extra[token_type] = extra
 
     if has_values(hard_missing) or has_values(hard_extra):
-        return "critical", issue_types, hard_missing, hard_extra, hard_order_only, style_missing, style_extra
+        return (
+            "critical",
+            issue_types,
+            hard_missing,
+            hard_extra,
+            hard_order_only,
+            style_missing,
+            style_extra,
+        )
     if has_values(hard_order_only):
-        return "hard_order", issue_types, hard_missing, hard_extra, hard_order_only, style_missing, style_extra
+        return (
+            "hard_order",
+            issue_types,
+            hard_missing,
+            hard_extra,
+            hard_order_only,
+            style_missing,
+            style_extra,
+        )
     if has_values(style_missing) or has_values(style_extra):
-        return "style", issue_types, hard_missing, hard_extra, hard_order_only, style_missing, style_extra
+        return (
+            "style",
+            issue_types,
+            hard_missing,
+            hard_extra,
+            hard_order_only,
+            style_missing,
+            style_extra,
+        )
     return None, issue_types, hard_missing, hard_extra, hard_order_only, style_missing, style_extra
 
 
@@ -238,7 +269,15 @@ def relative_file(auto_keys_dir: Path, csv_path: Path) -> tuple[str, str]:
     return mod, file_inside_mod
 
 
-def validate(auto_keys_dir: Path, mods: set[str]) -> tuple[list[TokenIssue], list[QuoteIssue], dict[str, object], list[dict[str, object]], list[dict[str, object]]]:
+def validate(
+    auto_keys_dir: Path, mods: set[str]
+) -> tuple[
+    list[TokenIssue],
+    list[QuoteIssue],
+    dict[str, object],
+    list[dict[str, object]],
+    list[dict[str, object]],
+]:
     issues: list[TokenIssue] = []
     quote_issues: list[QuoteIssue] = []
     file_stats: dict[tuple[str, str], dict[str, object]] = {}
@@ -299,77 +338,92 @@ def validate(auto_keys_dir: Path, mods: set[str]) -> tuple[list[TokenIssue], lis
                 korean_value = row.get("korean_value") or ""
 
                 # 따옴표 검사 1: 불균형 (english/korean 각각)
-                for field_name, field_value in (("korean_value", korean_value), ("english_value", english_value)):
+                for field_name, field_value in (
+                    ("korean_value", korean_value),
+                    ("english_value", english_value),
+                ):
                     result = check_quote_balance(field_value)
                     if result is not None:
                         leading, trailing = result
-                        quote_issues.append(QuoteIssue(
-                            mod=mod,
-                            file=file_inside_mod,
-                            line_number=line_number,
-                            key=key,
-                            field=field_name,
-                            issue_type="imbalance",
-                            leading=leading,
-                            trailing=trailing,
-                            english_value=english_value,
-                            raw_value=field_value,
-                        ))
+                        quote_issues.append(
+                            QuoteIssue(
+                                mod=mod,
+                                file=file_inside_mod,
+                                line_number=line_number,
+                                key=key,
+                                field=field_name,
+                                issue_type="imbalance",
+                                leading=leading,
+                                trailing=trailing,
+                                english_value=english_value,
+                                raw_value=field_value,
+                            )
+                        )
                         summary["quote_issue_rows"] = int(summary["quote_issue_rows"]) + 1
-                        file_stats[file_key]["quote_rows"] = int(file_stats[file_key]["quote_rows"]) + 1
+                        file_stats[file_key]["quote_rows"] = (
+                            int(file_stats[file_key]["quote_rows"]) + 1
+                        )
                         mod_stats[mod]["quote_rows"] = int(mod_stats[mod]["quote_rows"]) + 1
 
                 # 따옴표 검사 2: english는 따옴표 있는데 korean은 없음
                 if check_missing_quotes(english_value, korean_value):
-                    quote_issues.append(QuoteIssue(
-                        mod=mod,
-                        file=file_inside_mod,
-                        line_number=line_number,
-                        key=key,
-                        field="korean_value",
-                        issue_type="missing",
-                        leading=0,
-                        trailing=0,
-                        english_value=english_value,
-                        raw_value=korean_value,
-                    ))
+                    quote_issues.append(
+                        QuoteIssue(
+                            mod=mod,
+                            file=file_inside_mod,
+                            line_number=line_number,
+                            key=key,
+                            field="korean_value",
+                            issue_type="missing",
+                            leading=0,
+                            trailing=0,
+                            english_value=english_value,
+                            raw_value=korean_value,
+                        )
+                    )
                     summary["quote_issue_rows"] = int(summary["quote_issue_rows"]) + 1
                     file_stats[file_key]["quote_rows"] = int(file_stats[file_key]["quote_rows"]) + 1
                     mod_stats[mod]["quote_rows"] = int(mod_stats[mod]["quote_rows"]) + 1
 
                 # §(U+00A7) 유사 문자 오염 감지 — AI가 §를 ∽ 등으로 대체한 경우
                 if SECTION_SIGN_LOOKALIKE_RE.search(korean_value):
-                    issues.append(TokenIssue(
-                        mod=mod,
-                        file=file_inside_mod,
-                        line_number=line_number,
-                        key=key,
-                        severity="critical",
-                        priority=SEVERITY_PRIORITY["critical"],
-                        issue_types=["section_sign_corruption"],
-                        hard_missing={},
-                        hard_extra={},
-                        hard_order_only={},
-                        style_missing={},
-                        style_extra={},
-                        english_tokens={},
-                        korean_tokens={},
-                        english_value=english_value,
-                        korean_value=korean_value,
-                    ))
+                    issues.append(
+                        TokenIssue(
+                            mod=mod,
+                            file=file_inside_mod,
+                            line_number=line_number,
+                            key=key,
+                            severity="critical",
+                            priority=SEVERITY_PRIORITY["critical"],
+                            issue_types=["section_sign_corruption"],
+                            hard_missing={},
+                            hard_extra={},
+                            hard_order_only={},
+                            style_missing={},
+                            style_extra={},
+                            english_tokens={},
+                            korean_tokens={},
+                            english_value=english_value,
+                            korean_value=korean_value,
+                        )
+                    )
                     summary["critical_rows"] = int(summary["critical_rows"]) + 1
                     summary["issue_rows"] = int(summary["issue_rows"]) + 1
                     summary["issues_by_type"]["section_sign_corruption"] += 1
                     summary["issues_by_mod"][mod] += 1
                     summary["critical_by_mod"][mod] += 1
-                    file_stats[file_key]["critical_rows"] = int(file_stats[file_key]["critical_rows"]) + 1
+                    file_stats[file_key]["critical_rows"] = (
+                        int(file_stats[file_key]["critical_rows"]) + 1
+                    )
                     mod_stats[mod]["critical_rows"] = int(mod_stats[mod]["critical_rows"]) + 1
 
                 if not korean_value.strip():
                     continue
 
                 summary["rows_with_korean"] += 1
-                file_stats[file_key]["rows_with_korean"] = int(file_stats[file_key]["rows_with_korean"]) + 1
+                file_stats[file_key]["rows_with_korean"] = (
+                    int(file_stats[file_key]["rows_with_korean"]) + 1
+                )
                 mod_stats[mod]["rows_with_korean"] = int(mod_stats[mod]["rows_with_korean"]) + 1
 
                 english_tokens = extract_tokens(english_value)
@@ -378,8 +432,12 @@ def validate(auto_keys_dir: Path, mods: set[str]) -> tuple[list[TokenIssue], lis
                 korean_tokens = extract_tokens(korean_value)
 
                 summary["rows_with_english_tokens"] += 1
-                file_stats[file_key]["rows_with_english_tokens"] = int(file_stats[file_key]["rows_with_english_tokens"]) + 1
-                mod_stats[mod]["rows_with_english_tokens"] = int(mod_stats[mod]["rows_with_english_tokens"]) + 1
+                file_stats[file_key]["rows_with_english_tokens"] = (
+                    int(file_stats[file_key]["rows_with_english_tokens"]) + 1
+                )
+                mod_stats[mod]["rows_with_english_tokens"] = (
+                    int(mod_stats[mod]["rows_with_english_tokens"]) + 1
+                )
 
                 (
                     severity,
@@ -571,10 +629,21 @@ def main() -> int:
         include_style=args.include_style,
         include_order=args.include_order,
     )
-    style_count = write_issue_csv(style_csv, [issue for issue in issues if issue.severity == "style"])
+    style_count = write_issue_csv(
+        style_csv, [issue for issue in issues if issue.severity == "style"]
+    )
     quote_count = write_rows(
         quote_csv,
-        ["mod", "file", "line_number", "key", "field", "leading_quotes", "trailing_quotes", "raw_value"],
+        [
+            "mod",
+            "file",
+            "line_number",
+            "key",
+            "field",
+            "leading_quotes",
+            "trailing_quotes",
+            "raw_value",
+        ],
         [
             {
                 "mod": q.mod,

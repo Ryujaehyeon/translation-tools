@@ -6,7 +6,6 @@ import configparser
 import os
 from pathlib import Path
 
-
 PACK_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = PACK_ROOT / "maintenance" / "tooling.ini"
 TRANSLATION_KEYS_ENV = "STELLARIS_TRANSLATION_KEYS_DIR"
@@ -29,8 +28,8 @@ def pack_path(raw: str | Path) -> Path:
 def translation_keys_root(validate: bool = False) -> Path:
     """Return the translation keys root directory.
 
-    validate=True のとき、パスが存在しなければ SystemExit を送出する。
-    パイプライン起動時など、早期に失敗させたい場合に使う。
+    validate=True이면 경로가 없을 때 SystemExit을 던진다.
+    파이프라인 시작 시점 등 일찍 실패시키고 싶을 때 쓴다.
     """
     raw = os.environ.get(TRANSLATION_KEYS_ENV, "").strip()
     if not raw:

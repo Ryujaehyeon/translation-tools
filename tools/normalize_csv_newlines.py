@@ -9,14 +9,17 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-
 PACK_ROOT = Path(__file__).resolve().parents[1]
 BACKUP_ROOT = PACK_ROOT / "maintenance" / "backups" / "normalize_csv_newlines"
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Replace embedded CR/LF inside CSV cells with literal \\n.")
-    parser.add_argument("csv_path", help="CSV path, relative to the translation pack root or absolute.")
+    parser = argparse.ArgumentParser(
+        description="Replace embedded CR/LF inside CSV cells with literal \\n."
+    )
+    parser.add_argument(
+        "csv_path", help="CSV path, relative to the translation pack root or absolute."
+    )
     parser.add_argument("--dry-run", action="store_true", help="Report rows only; do not write.")
     return parser.parse_args()
 
@@ -44,7 +47,9 @@ def main() -> int:
         for field in fieldnames:
             new_value, changed = normalize_value(row.get(field, "") or "")
             if changed:
-                changed_cells.append({"line_number": line_number, "key": row.get("key", ""), "field": field})
+                changed_cells.append(
+                    {"line_number": line_number, "key": row.get("key", ""), "field": field}
+                )
                 row[field] = new_value
 
     print(f"rows={len(rows)}")

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """CSV 양식 검사 래퍼 — normalize_csv_newlines, fix_quote_issues, validate_auto_key_tokens를 순서대로 실행한다.
 
 사용:
@@ -30,26 +30,33 @@ AUTO_KEYS_DIR = translation_keys_root()
 
 # ── 출력 헬퍼 ─────────────────────────────────────────────────────────
 
+
 def header(step: int, total: int, title: str) -> None:
     print(f"\n┌─ [{step}/{total}] {title}")
+
 
 def footer_ok(msg: str) -> None:
     print(f"└─ ✓ {msg}")
 
+
 def footer_warn(msg: str) -> None:
     print(f"└─ ⚠ {msg}")
+
 
 def footer_err(msg: str) -> None:
     print(f"└─ ✗ {msg}")
 
+
 def item(msg: str) -> None:
     print(f"│  {msg}")
+
 
 def divider() -> None:
     print()
 
 
 # ── 파싱 헬퍼 ─────────────────────────────────────────────────────────
+
 
 def parse_kv(text: str) -> dict[str, str]:
     """key=value 형식의 출력을 딕셔너리로 변환."""
@@ -71,6 +78,7 @@ def short_path(path_str: str) -> str:
 
 # ── 각 단계 실행 ──────────────────────────────────────────────────────
 
+
 def run_normalize(csv_files: list[Path], dry_run: bool) -> int:
     header(1, 3, "줄바꿈 정규화  (실제 줄바꿈 → \\n 리터럴)")
     dry = ["--dry-run"] if dry_run else []
@@ -80,7 +88,10 @@ def run_normalize(csv_files: list[Path], dry_run: bool) -> int:
     for p in csv_files:
         result = subprocess.run(
             [sys.executable, str(SCRIPT_DIR / "normalize_csv_newlines.py"), str(p)] + dry,
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode != 0:
             errors += 1
@@ -112,20 +123,14 @@ def run_fix_quote(mods: list[str], dry_run: bool) -> int:
         cmd += ["--mod", mod]
 
     result = subprocess.run(
-        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        cmd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     )
 
     out = result.stdout + result.stderr
-    # 최종 요약 줄 파싱
-    added = re.search(r"재배치.*?(\d+)개", out)
-    removed = re.search(r"불균형.*?(\d+)개", out)
-    double = re.search(r"이중.*?(\d+)개", out)
-
-    # 파일별 변경 줄
-    file_lines = re.findall(r"\[(dry-run)\]\s+(.+?\.csv):\s+(.+)", out)
-    normal_lines = re.findall(r"(?<!\[dry-run\] )(\S+\.csv):\s+(재배치\S*\s+\d+개.+)", out)
-    changed_lines = re.findall(r"(.+\.csv):.+?(?:이중감싸기|재배치|불균형)\s+(\d+)개.+합계\s+(\d+)개", out)
-
     # 합계 추출
     total_match = re.search(r"합계:\s*(\d+)개", out)
     total = int(total_match.group(1)) if total_match else 0
@@ -152,16 +157,20 @@ def run_validate(mods: list[str]) -> int:
         cmd += ["--mod", mod]
 
     result = subprocess.run(
-        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        cmd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     kv = parse_kv(result.stdout)
 
-    scanned   = kv.get("scanned_files", "?")
-    critical  = int(kv.get("critical_rows", 0))
-    order     = int(kv.get("hard_order_rows", 0))
-    style     = int(kv.get("style_rows", 0))
-    quote     = int(kv.get("quote_issue_rows", 0))
-    repair    = int(kv.get("repair_worklist_rows", 0))
+    scanned = kv.get("scanned_files", "?")
+    critical = int(kv.get("critical_rows", 0))
+    order = int(kv.get("hard_order_rows", 0))
+    style = int(kv.get("style_rows", 0))
+    quote = int(kv.get("quote_issue_rows", 0))
+    repair = int(kv.get("repair_worklist_rows", 0))
 
     item(f"스캔 파일: {scanned}개")
     item(f"Critical (토큰 누락·추가): {critical}행  ← 즉시 수정 필요")
@@ -187,20 +196,31 @@ def run_validate(mods: list[str]) -> int:
 
 # ── 메인 ──────────────────────────────────────────────────────────────
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="CSV 양식 검사·보정 래퍼")
-    parser.add_argument("--mod", action="append", default=[], metavar="MOD",
-                        help="특정 모드 폴더만 처리. 반복 가능.")
-    parser.add_argument("--file", action="append", default=[], metavar="FILE",
-                        help="특정 CSV 파일만 처리. 반복 가능.")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="파일 수정 없이 탐지만.")
-    parser.add_argument("--skip-normalize", action="store_true",
-                        help="normalize_csv_newlines 건너뜀.")
-    parser.add_argument("--skip-quote", action="store_true",
-                        help="fix_quote_issues 건너뜀.")
-    parser.add_argument("--skip-validate", action="store_true",
-                        help="validate_auto_key_tokens 건너뜀.")
+    parser.add_argument(
+        "--mod",
+        action="append",
+        default=[],
+        metavar="MOD",
+        help="특정 모드 폴더만 처리. 반복 가능.",
+    )
+    parser.add_argument(
+        "--file",
+        action="append",
+        default=[],
+        metavar="FILE",
+        help="특정 CSV 파일만 처리. 반복 가능.",
+    )
+    parser.add_argument("--dry-run", action="store_true", help="파일 수정 없이 탐지만.")
+    parser.add_argument(
+        "--skip-normalize", action="store_true", help="normalize_csv_newlines 건너뜀."
+    )
+    parser.add_argument("--skip-quote", action="store_true", help="fix_quote_issues 건너뜀.")
+    parser.add_argument(
+        "--skip-validate", action="store_true", help="validate_auto_key_tokens 건너뜀."
+    )
     return parser.parse_args()
 
 

@@ -31,8 +31,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-
-from tool_config import workshop_root as _configured_workshop_root, PACK_ROOT, resolve_pack_path, english_source_root
+from tool_config import english_source_root, resolve_pack_path
+from tool_config import workshop_root as _configured_workshop_root
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 ENTRY_RE = re.compile(r"^\s*([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
@@ -105,7 +105,9 @@ def iter_localisation_entries(path: Path) -> list[tuple[str, str]]:
     return entries
 
 
-def output_path_for(source_file: Path, source_root: Path, output_root: Path, output_prefix: Path = Path()) -> Path:
+def output_path_for(
+    source_file: Path, source_root: Path, output_root: Path, output_prefix: Path = Path()
+) -> Path:
     """Map an English source yml path to the matching *_key.csv path."""
     relative = source_file.relative_to(source_root)
     stem = relative.name
@@ -114,8 +116,6 @@ def output_path_for(source_file: Path, source_root: Path, output_root: Path, out
     else:
         stem = relative.stem + "_key.csv"
     return output_root / output_prefix / relative.parent / stem
-
-
 
 
 def discover_english_sources(mod_root: Path) -> list[tuple[Path, Path, Path]]:
@@ -132,7 +132,11 @@ def discover_english_sources(mod_root: Path) -> list[tuple[Path, Path, Path]]:
     for source_root, output_prefix, recursive in candidates:
         if not source_root.is_dir():
             continue
-        files = sorted(source_root.rglob("*_l_english.yml") if recursive else source_root.glob("*_l_english.yml"))
+        files = sorted(
+            source_root.rglob("*_l_english.yml")
+            if recursive
+            else source_root.glob("*_l_english.yml")
+        )
         for source_file in files:
             resolved = source_file.resolve()
             if resolved in seen:
@@ -159,13 +163,17 @@ def read_existing_rows(csv_path: Path) -> list[dict[str, str]]:
                 {
                     "key": key,
                     "english_value": row.get("english_value") or "",
-                    "korean_value": "" if row.get("korean_value") is None else row.get("korean_value") or "",
+                    "korean_value": ""
+                    if row.get("korean_value") is None
+                    else row.get("korean_value") or "",
                 }
             )
         return rows
 
 
-def rows_for_sync(entries: list[tuple[str, str]], existing_rows: list[dict[str, str]], preserve_korean: bool) -> list[dict[str, str]]:
+def rows_for_sync(
+    entries: list[tuple[str, str]], existing_rows: list[dict[str, str]], preserve_korean: bool
+) -> list[dict[str, str]]:
     """Return rows in source order, preserving existing Korean values."""
     korean_by_key = {row["key"]: row.get("korean_value", "") for row in existing_rows}
     return [
@@ -194,7 +202,11 @@ def rows_for_merge(
         if key in existing_keys:
             continue
         existing_keys.add(key)
-        english_value = row.get("english_value", "") if keep_existing_english else source_by_key.get(key, row.get("english_value", ""))
+        english_value = (
+            row.get("english_value", "")
+            if keep_existing_english
+            else source_by_key.get(key, row.get("english_value", ""))
+        )
         merged.append(
             {
                 "key": key,
@@ -250,11 +262,17 @@ def main() -> int:
         existing_source_keys = sorted(new_keys & old_keys)
         stale_keys = sorted(old_keys - new_keys)
         removed_keys = stale_keys if args.sync_source else []
-        preserved_count = sum(1 for row in existing_rows if row["key"] in new_keys and row.get("korean_value") and preserve_korean)
+        preserved_count = sum(
+            1
+            for row in existing_rows
+            if row["key"] in new_keys and row.get("korean_value") and preserve_korean
+        )
         if args.sync_source:
             output_rows = rows_for_sync(entries, existing_rows, preserve_korean)
         else:
-            output_rows = rows_for_merge(entries, existing_rows, preserve_korean, args.keep_existing_english)
+            output_rows = rows_for_merge(
+                entries, existing_rows, preserve_korean, args.keep_existing_english
+            )
         csv_path.parent.mkdir(parents=True, exist_ok=True)
         with csv_path.open("w", encoding="utf-8-sig", newline="") as handle:
             writer = csv.writer(handle)

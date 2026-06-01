@@ -1,4 +1,4 @@
-﻿"""번역 검수 리포트 생성기.
+"""번역 검수 리포트 생성기.
 
 auto_keys CSV를 스캔해 의심스러운 번역 행 (기본 모드) 또는
 정상 번역 행 (퀄리티 모드) 을 CSV로 출력한다.
@@ -64,28 +64,28 @@ sys.path.insert(0, str(Path(__file__).parent))
 from tool_config import translation_keys_root
 from translate_keys import (
     HANGUL_RE,
-    has_quote_noise,
-    hard_tokens_differ,
-    is_token_only,
     _strip_all_tokens,
+    hard_tokens_differ,
+    has_quote_noise,
+    is_token_only,
 )
 
 # <...> 동적 포맷 토큰 (네임 포맷 등) — 번역 불가 구조
 _ANGLE_FMT_RE = re.compile(r"<[^>]+>")
 # YML 인라인 주석: 값 뒤에 공백+"# ..." 형태로 붙는 원본 모드 주석
 # 예: `$giga_birch_orykta_col$‌§!"  # between the $ and §...`
-_YML_INLINE_COMMENT_RE = re.compile(r'\s+#.*$')
+_YML_INLINE_COMMENT_RE = re.compile(r"\s+#.*$")
 # 번역 불필요 단어 패턴:
 #   - 대문자 시작 고유명사 (Ssha, T'lind, Ndeir 등)
 #   - 숫자·기호만으로 구성 (수식, 범위: n100+10+(0-9):, -100%, 1 - 10)
 #   - 약어/코드 (AI, AI:, "Society:" 같은 레이블 뒤 콜론은 stripped에서 별도 토큰)
 #   소문자 시작이라도 번역 불필요한 케이스: 단어가 숫자를 포함하거나 콜론으로 끝남
 _PROPER_WORD_RE = re.compile(
-    r"^[A-Z][A-Za-z0-9''\-]*$"        # 대문자 시작 고유명사
+    r"^[A-Z][A-Za-z0-9''\-]*$"  # 대문자 시작 고유명사
     r"|^[A-Z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+\.?$"  # 점 포함 약어 (F.S.A.E., U.T.A. 등)
-    r"|^[A-Za-z]{1,5}:?$"              # 짧은 약어 (AI, AI:, def, def: 등 5자 이하)
+    r"|^[A-Za-z]{1,5}:?$"  # 짧은 약어 (AI, AI:, def, def: 등 5자 이하)
     r"|^[A-Za-z0-9]*[0-9\+\-\(\)\*][A-Za-z0-9\+\-\(\)\*\:\.]*$"  # 수식/포맷 (n100, +1%, 0-9: 등)
-    r"|^[^A-Za-z]*$"                   # 숫자·기호만 (수식, 퍼센트 등)
+    r"|^[^A-Za-z]*$"  # 숫자·기호만 (수식, 퍼센트 등)
 )
 
 
@@ -116,6 +116,7 @@ ERROR_REASONS = {"empty", "token_broken", "no_hangul", "quote_noise"}
 
 # ── 단어집 ────────────────────────────────────────────────────────────────────
 
+
 def load_glossary(path: Path) -> dict[str, str]:
     """english(소문자) → korean 매핑 반환. 파일 없으면 빈 딕셔너리."""
     result: dict[str, str] = {}
@@ -134,6 +135,7 @@ def load_glossary(path: Path) -> dict[str, str]:
 
 
 # ── 검사 함수 ─────────────────────────────────────────────────────────────────
+
 
 def _parse_cell(raw: str) -> str:
     s = (raw or "").strip()
@@ -216,6 +218,7 @@ def classify_severity(reasons: list[str]) -> str:
 
 # ── 스캔 ─────────────────────────────────────────────────────────────────────
 
+
 def scan_file(
     csv_path: Path,
     reason_filter: set[str],
@@ -264,34 +267,40 @@ def scan_file(
                         continue
                     if is_token_only(eng_inner):
                         continue
-                    rows_out.append({
-                        "mod": mod_col,
-                        "file": file_col,
-                        "row": str(lineno),
-                        "key": row.get("key", ""),
-                        "severity": "quality",
-                        "reason": "quality_review",
-                        "english_value": eng_raw,
-                        "korean_value": kor_raw,
-                        "retranslate": retranslate_default,
-                    })
+                    rows_out.append(
+                        {
+                            "mod": mod_col,
+                            "file": file_col,
+                            "row": str(lineno),
+                            "key": row.get("key", ""),
+                            "severity": "quality",
+                            "reason": "quality_review",
+                            "english_value": eng_raw,
+                            "korean_value": kor_raw,
+                            "retranslate": retranslate_default,
+                        }
+                    )
                 else:
                     # 기본 모드: 의심 행만
                     if not report_reasons:
                         continue
                     severity = classify_severity(report_reasons)
-                    retranslate_value = "1" if mark_errors and severity == "error" else retranslate_default
-                    rows_out.append({
-                        "mod": mod_col,
-                        "file": file_col,
-                        "row": str(lineno),
-                        "key": row.get("key", ""),
-                        "severity": severity,
-                        "reason": "|".join(report_reasons),
-                        "english_value": eng_raw,
-                        "korean_value": kor_raw,
-                        "retranslate": retranslate_value,
-                    })
+                    retranslate_value = (
+                        "1" if mark_errors and severity == "error" else retranslate_default
+                    )
+                    rows_out.append(
+                        {
+                            "mod": mod_col,
+                            "file": file_col,
+                            "row": str(lineno),
+                            "key": row.get("key", ""),
+                            "severity": severity,
+                            "reason": "|".join(report_reasons),
+                            "english_value": eng_raw,
+                            "korean_value": kor_raw,
+                            "retranslate": retranslate_value,
+                        }
+                    )
     except Exception as exc:
         print(f"[WARN] 읽기 실패 {csv_path}: {exc}", file=sys.stderr)
     return rows_out
@@ -356,7 +365,17 @@ def run(
         return
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = ["mod", "file", "row", "key", "severity", "reason", "english_value", "korean_value", "retranslate"]
+    fieldnames = [
+        "mod",
+        "file",
+        "row",
+        "key",
+        "severity",
+        "reason",
+        "english_value",
+        "korean_value",
+        "retranslate",
+    ]
     with output.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -370,16 +389,17 @@ def run(
         print("  1. 리포트를 Excel/Sheets에서 열어 번역 품질 검토")
         print("  2. 재번역할 행의 'retranslate' 열에 1 입력")
         print("  3. 저장 후 실행:")
-        print(f"     python tools/translate_keys.py --from-report quality")
+        print("     python tools/translate_keys.py --from-report quality")
     else:
         print("\n검수 방법:")
         print("  1. 자동 절차: --mark-errors로 생성한 뒤 translate_keys.py --from-report 실행")
         print("  2. 수동 검수: 리포트를 열어 재번역할 행의 'retranslate' 열에 1 입력")
         print("  3. 저장 후 실행:")
-        print(f"     python tools/translate_keys.py --from-report")
+        print("     python tools/translate_keys.py --from-report")
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -392,8 +412,12 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--auto-keys-dir", default=str(AUTO_KEYS_DIR))
-    parser.add_argument("--mod", action="append", default=[], help="특정 모드 폴더만 처리. 반복 가능.")
-    parser.add_argument("--file", action="append", default=[], help="특정 CSV 파일명/경로. 반복 가능.")
+    parser.add_argument(
+        "--mod", action="append", default=[], help="특정 모드 폴더만 처리. 반복 가능."
+    )
+    parser.add_argument(
+        "--file", action="append", default=[], help="특정 CSV 파일명/경로. 반복 가능."
+    )
     parser.add_argument(
         "--reason",
         nargs="+",
@@ -410,7 +434,9 @@ def parse_args() -> argparse.Namespace:
             "리포트: review_quality_latest.csv"
         ),
     )
-    parser.add_argument("--output", default="", help="출력 CSV 경로를 직접 지정. 기본: 모드에 따라 자동 결정.")
+    parser.add_argument(
+        "--output", default="", help="출력 CSV 경로를 직접 지정. 기본: 모드에 따라 자동 결정."
+    )
     parser.add_argument(
         "--mark-retranslate",
         action="store_true",
@@ -438,7 +464,9 @@ def main() -> int:
         print("오류: --quality 와 --mark-errors 는 함께 사용할 수 없습니다.", file=sys.stderr)
         return 1
     if args.mark_retranslate and args.mark_errors:
-        print("오류: --mark-retranslate 와 --mark-errors 는 함께 사용할 수 없습니다.", file=sys.stderr)
+        print(
+            "오류: --mark-retranslate 와 --mark-errors 는 함께 사용할 수 없습니다.", file=sys.stderr
+        )
         return 1
 
     if args.output:
@@ -458,7 +486,16 @@ def main() -> int:
 
     reason_filter = set(args.reason)
     retranslate_default = "1" if args.mark_retranslate else ""
-    run(auto_keys_dir, args.mod, args.file, reason_filter, output, retranslate_default, args.mark_errors, args.quality)
+    run(
+        auto_keys_dir,
+        args.mod,
+        args.file,
+        reason_filter,
+        output,
+        retranslate_default,
+        args.mark_errors,
+        args.quality,
+    )
     return 0
 
 

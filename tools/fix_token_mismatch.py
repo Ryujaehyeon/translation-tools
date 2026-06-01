@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """hard_token_mismatch 행을 리포트에서 읽어 번역 후보를 출력한다.
 
 OpenAI API를 사용하지 않는다. 사람(또는 Claude)이 직접 번역을 입력하거나
@@ -41,7 +41,9 @@ BACKUP_ROOT = PACK_ROOT / "maintenance" / "backups" / "fix_token_mismatch"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="hard_token_mismatch 행 검토 및 수동 수정 도구")
-    parser.add_argument("--report", default="", help="리포트 JSON 경로. 기본: translate_keys_latest.json")
+    parser.add_argument(
+        "--report", default="", help="리포트 JSON 경로. 기본: translate_keys_latest.json"
+    )
     parser.add_argument("--mod", default="", help="특정 auto_keys 모드 폴더명으로 필터")
     parser.add_argument("--export", default="", metavar="CSV", help="mismatch 행을 CSV로 내보내기")
     parser.add_argument("--apply", default="", metavar="CSV", help="채워진 CSV를 auto_keys에 반영")
@@ -57,13 +59,15 @@ def load_report(report_path: Path) -> list[dict]:
         csv_path = file_entry.get("path", "")
         for issue in file_entry.get("issues", []):
             if issue.get("reason") == "hard_token_mismatch":
-                rows.append({
-                    "csv_path": csv_path,
-                    "key": issue.get("key", ""),
-                    "english_value": issue.get("english_value", ""),
-                    "rejected_value": issue.get("rejected_value", ""),
-                    "token_delta": issue.get("token_delta", {}),
-                })
+                rows.append(
+                    {
+                        "csv_path": csv_path,
+                        "key": issue.get("key", ""),
+                        "english_value": issue.get("english_value", ""),
+                        "rejected_value": issue.get("rejected_value", ""),
+                        "token_delta": issue.get("token_delta", {}),
+                    }
+                )
     return rows
 
 
@@ -104,19 +108,28 @@ def export_csv(rows: list[dict], mod_filter: str, output: Path) -> None:
         print("내보낼 행이 없습니다.")
         return
     output.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = ["csv_path", "key", "english_value", "rejected_value", "token_delta", "korean_value"]
+    fieldnames = [
+        "csv_path",
+        "key",
+        "english_value",
+        "rejected_value",
+        "token_delta",
+        "korean_value",
+    ]
     with output.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for r in filtered:
-            writer.writerow({
-                "csv_path": r["csv_path"],
-                "key": r["key"],
-                "english_value": r["english_value"],
-                "rejected_value": r["rejected_value"],
-                "token_delta": format_delta(r["token_delta"]),
-                "korean_value": "",  # 사람/Claude가 채울 열
-            })
+            writer.writerow(
+                {
+                    "csv_path": r["csv_path"],
+                    "key": r["key"],
+                    "english_value": r["english_value"],
+                    "rejected_value": r["rejected_value"],
+                    "token_delta": format_delta(r["token_delta"]),
+                    "korean_value": "",  # 사람/Claude가 채울 열
+                }
+            )
     print(f"내보내기 완료: {output}  ({len(filtered)}행)")
     print("korean_value 열을 채운 뒤 --apply 옵션으로 반영하세요.")
 
@@ -145,6 +158,7 @@ def apply_csv(input_path: Path) -> None:
 
         # 백업
         import datetime as dt
+
         ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         try:
             rel = csv_path.relative_to(AUTO_KEYS_DIR)
@@ -198,7 +212,11 @@ def main() -> int:
     rows = load_report(report_path)
 
     if args.export:
-        export_csv(rows, args.mod, Path(args.export) if Path(args.export).is_absolute() else PACK_ROOT / args.export)
+        export_csv(
+            rows,
+            args.mod,
+            Path(args.export) if Path(args.export).is_absolute() else PACK_ROOT / args.export,
+        )
     else:
         print_mismatches(rows, args.mod)
 

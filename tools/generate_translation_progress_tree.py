@@ -3,6 +3,7 @@
 사용:
     python tools/generate_translation_progress_tree.py
 """
+
 from __future__ import annotations
 
 import csv
@@ -18,7 +19,8 @@ AUTO_KEYS = translation_keys_root()
 OUTPUT = PACK_ROOT / "maintenance" / "translation_progress_tree.md"
 
 sys.path.insert(0, str(SCRIPT_DIR))
-from review_report import _parse_cell, get_reasons, ERROR_REASONS
+# sys.path 조정 후에야 import 가능하므로 최상단으로 옮길 수 없다.
+from review_report import ERROR_REASONS, _parse_cell, get_reasons  # noqa: E402
 
 
 def has_source(value: str) -> bool:
@@ -83,25 +85,34 @@ def main() -> None:
             if total == 0 and empty == 0:
                 continue
             rel_name = str(csv_path.relative_to(mod_dir))
-            files.append({
-                "name": rel_name,
-                "total": total, "done": done, "suspicious": suspicious, "empty": empty,
-                "pct": pct(done, total),
-                "status": status(done, total, suspicious, empty),
-            })
+            files.append(
+                {
+                    "name": rel_name,
+                    "total": total,
+                    "done": done,
+                    "suspicious": suspicious,
+                    "empty": empty,
+                    "pct": pct(done, total),
+                    "status": status(done, total, suspicious, empty),
+                }
+            )
             mod_total += total
             mod_done += done
             mod_suspicious += suspicious
             mod_empty += empty
         if files:
-            mods.append({
-                "name": mod_dir.name,
-                "total": mod_total, "done": mod_done,
-                "suspicious": mod_suspicious, "empty": mod_empty,
-                "pct": pct(mod_done, mod_total),
-                "status": status(mod_done, mod_total, mod_suspicious, mod_empty),
-                "files": sorted(files, key=lambda x: (x["pct"], x["name"].lower())),
-            })
+            mods.append(
+                {
+                    "name": mod_dir.name,
+                    "total": mod_total,
+                    "done": mod_done,
+                    "suspicious": mod_suspicious,
+                    "empty": mod_empty,
+                    "pct": pct(mod_done, mod_total),
+                    "status": status(mod_done, mod_total, mod_suspicious, mod_empty),
+                    "files": sorted(files, key=lambda x: (x["pct"], x["name"].lower())),
+                }
+            )
 
     mods.sort(key=lambda x: x["name"].lower())
 

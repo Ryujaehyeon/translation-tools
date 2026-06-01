@@ -1,0 +1,6 @@
+# 개발 전용 종속성 (선택). 도구를 "사용"만 하는 사람은 설치할 필요 없다.
+# 코드를 고치거나 검사할 때만 쓴다. 설치: pip install -r requirements-dev.txt
+#
+# 런타임 종속성은 requirements.txt 에 있다.
+
+ruff>=0.6.0

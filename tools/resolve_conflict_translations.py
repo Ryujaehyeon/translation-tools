@@ -24,7 +24,6 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-
 DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = Path(__file__).resolve().parents[2] / "integrated_korean_translation_pack"
@@ -52,8 +51,12 @@ def parse_args() -> argparse.Namespace:
         help="Directory containing per-file *_key.csv files. Relative paths are resolved from the translation pack root.",
     )
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--prepare", action="store_true", help="Create a conflict resolution work CSV.")
-    mode.add_argument("--apply", metavar="CSV", help="Apply filled new_korean_value rows from a work CSV.")
+    mode.add_argument(
+        "--prepare", action="store_true", help="Create a conflict resolution work CSV."
+    )
+    mode.add_argument(
+        "--apply", metavar="CSV", help="Apply filled new_korean_value rows from a work CSV."
+    )
     parser.add_argument(
         "--workshop-root",
         default=str(DEFAULT_WORKSHOP_ROOT),
@@ -212,7 +215,14 @@ def write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8-sig")
 
 
-def prepare(args: argparse.Namespace, timestamp: str, mod_root: Path, csv_root: Path, korean_root: Path, report_root: Path) -> int:
+def prepare(
+    args: argparse.Namespace,
+    timestamp: str,
+    mod_root: Path,
+    csv_root: Path,
+    korean_root: Path,
+    report_root: Path,
+) -> int:
     """Create the manual conflict-resolution CSV without editing yml files."""
     conflicts = build_korean_conflicts(korean_root)
     rows: list[dict[str, object]] = []
@@ -231,8 +241,12 @@ def prepare(args: argparse.Namespace, timestamp: str, mod_root: Path, csv_root: 
                     "target_file": rel_target,
                     "key": key,
                     "english_value": source_entries.get(key, ("", "", ""))[2],
-                    "conflict_values": json.dumps([item["value"] for item in conflicts[key]], ensure_ascii=False),
-                    "conflict_sources": json.dumps([item["sources"] for item in conflicts[key]], ensure_ascii=False),
+                    "conflict_values": json.dumps(
+                        [item["value"] for item in conflicts[key]], ensure_ascii=False
+                    ),
+                    "conflict_sources": json.dumps(
+                        [item["sources"] for item in conflicts[key]], ensure_ascii=False
+                    ),
                     "new_korean_value": "",
                     "notes": "",
                 }
@@ -258,7 +272,9 @@ def prepare(args: argparse.Namespace, timestamp: str, mod_root: Path, csv_root: 
     return 0
 
 
-def normalise_new_value(key: str, source_entry: tuple[str | None, str, str] | None, raw_value: str) -> tuple[str | None, str | None]:
+def normalise_new_value(
+    key: str, source_entry: tuple[str | None, str, str] | None, raw_value: str
+) -> tuple[str | None, str | None]:
     """Convert new_korean_value into a full localisation line.
 
     The user may type either a bare Korean value or a complete `key:0 "..."`.
@@ -383,20 +399,40 @@ def apply_resolutions(
         key = (row.get("key") or "").strip()
         raw_new_value = (row.get("new_korean_value") or "").strip()
         if not raw_new_value:
-            skipped.append({"target_file": rel_target, "key": key, "reason": "new_korean_value is empty"})
+            skipped.append(
+                {"target_file": rel_target, "key": key, "reason": "new_korean_value is empty"}
+            )
             continue
         if rel_target not in keys_by_target:
-            errors.append({"target_file": rel_target, "key": key, "error": "target_file is not part of csv_dir"})
+            errors.append(
+                {
+                    "target_file": rel_target,
+                    "key": key,
+                    "error": "target_file is not part of csv_dir",
+                }
+            )
             continue
         if key not in keys_by_target[rel_target]:
-            errors.append({"target_file": rel_target, "key": key, "error": "key is not part of target CSV"})
+            errors.append(
+                {"target_file": rel_target, "key": key, "error": "key is not part of target CSV"}
+            )
             continue
 
         target_path = korean_root / rel_target
-        source_entries = parse_entries(source_by_target[rel_target]) if source_by_target[rel_target].is_file() else {}
+        source_entries = (
+            parse_entries(source_by_target[rel_target])
+            if source_by_target[rel_target].is_file()
+            else {}
+        )
         new_line, error = normalise_new_value(key, source_entries.get(key), raw_new_value)
         if error or new_line is None:
-            errors.append({"target_file": rel_target, "key": key, "error": error or "unknown normalisation error"})
+            errors.append(
+                {
+                    "target_file": rel_target,
+                    "key": key,
+                    "error": error or "unknown normalisation error",
+                }
+            )
             continue
 
         if target_path.exists() and rel_target not in backed_up_files:

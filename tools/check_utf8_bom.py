@@ -15,7 +15,6 @@ from pathlib import Path
 
 from tool_config import translation_keys_root_arg
 
-
 PACK_ROOT = Path(__file__).resolve().parents[1]
 BOM = b"\xef\xbb\xbf"
 DEFAULT_PATTERNS = ("*.csv", "*.yml", "*.json", "*.md")
@@ -25,14 +24,21 @@ BACKUP_ROOT = PACK_ROOT / "maintenance" / "backups" / "utf8_bom"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Check or add UTF-8 BOM for generated text files.")
-    parser.add_argument("paths", nargs="*", help="Files or directories to scan. Defaults to translation keys and localisation.")
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        help="Files or directories to scan. Defaults to translation keys and localisation.",
+    )
     parser.add_argument("--fix", action="store_true", help="Add BOM to files missing it.")
     parser.add_argument("--pattern", action="append", default=[], help="Glob pattern. Can repeat.")
     return parser.parse_args()
 
 
 def iter_files(paths: list[str], patterns: tuple[str, ...]):
-    roots = [Path(raw) if Path(raw).is_absolute() else PACK_ROOT / raw for raw in (paths or list(DEFAULT_ROOTS))]
+    roots = [
+        Path(raw) if Path(raw).is_absolute() else PACK_ROOT / raw
+        for raw in (paths or list(DEFAULT_ROOTS))
+    ]
     for root in roots:
         if root.is_file():
             yield root

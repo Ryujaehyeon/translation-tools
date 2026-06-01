@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-
 DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
 PACK_ROOT = Path(__file__).resolve().parents[1]
 ENTRY_RE = re.compile(r"^\s*([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")

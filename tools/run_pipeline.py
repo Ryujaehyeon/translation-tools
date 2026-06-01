@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Run localisation maintenance tools across workshop mod folders.
 
 This script is the orchestration layer for the translation-pack workflow. It
@@ -31,15 +31,15 @@ from datetime import datetime
 from pathlib import Path
 
 from tool_config import (
-    translation_keys_root_arg,
-    workshop_root as configured_workshop_root,
-    output_root,
     ensure_standalone_mod,
     is_integrated_mode,
+    output_root,
     resolve_pack_path,
-    english_source_root,
+    translation_keys_root_arg,
 )
-
+from tool_config import (
+    workshop_root as configured_workshop_root,
+)
 
 STELLARIS_APP_ID = "281990"
 # 캐시 포맷이 바뀌면 이 값을 올린다 (캐시 자동 무효화).
@@ -274,7 +274,7 @@ def detect_workshop_root() -> Path:
             return candidate
     raise SystemExit(
         "Could not find Stellaris workshop content folder. "
-        "Pass --workshop-root explicitly, for example --workshop-root \"D:\\Steam\\steamapps\\workshop\\content\\281990\"."
+        'Pass --workshop-root explicitly, for example --workshop-root "D:\\Steam\\steamapps\\workshop\\content\\281990".'
     )
 
 
@@ -305,13 +305,19 @@ def classify_mod_root(mod_root: Path) -> dict[str, object]:
     name = descriptor_name(mod_root) if mod_root.is_dir() else mod_id
     localisation_root = mod_root / "localisation"
     english_root = localisation_root / "english"
-    direct_english_files = sorted(localisation_root.glob("*_l_english.yml")) if localisation_root.is_dir() else []
+    direct_english_files = (
+        sorted(localisation_root.glob("*_l_english.yml")) if localisation_root.is_dir() else []
+    )
     replace_root = localisation_root / "replace"
-    replace_english_files = sorted(replace_root.rglob("*_l_english.yml")) if replace_root.is_dir() else []
+    replace_english_files = (
+        sorted(replace_root.rglob("*_l_english.yml")) if replace_root.is_dir() else []
+    )
     korean_root = localisation_root / "korean"
     localisation_dirs = []
     if localisation_root.is_dir():
-        localisation_dirs = sorted(path.name for path in localisation_root.iterdir() if path.is_dir())
+        localisation_dirs = sorted(
+            path.name for path in localisation_root.iterdir() if path.is_dir()
+        )
 
     if not mod_root.is_dir():
         category = "missing_mod_folder"
@@ -370,7 +376,9 @@ def filter_classified_mods(
     ]
 
 
-def target_mods_from_classification(classified: list[dict[str, object]], limit: int) -> list[dict[str, str]]:
+def target_mods_from_classification(
+    classified: list[dict[str, object]], limit: int
+) -> list[dict[str, str]]:
     """Return processable mods from classification records."""
     targets: list[dict[str, str]] = [
         {
@@ -498,7 +506,9 @@ def csv_tree_exists(keys_dir_arg: str) -> bool:
     return keys_dir.is_dir() and any(keys_dir.rglob("*_key.csv"))
 
 
-def cache_hit(mod: dict[str, str], keys_dir_arg: str, cache: dict[str, object], force: bool) -> bool:
+def cache_hit(
+    mod: dict[str, str], keys_dir_arg: str, cache: dict[str, object], force: bool
+) -> bool:
     """Decide whether extraction can be skipped for an unchanged source tree."""
     if force:
         return False
@@ -563,7 +573,9 @@ def run_tool(command: list[str]) -> dict[str, object]:
     }
 
 
-def run_or_record(command: list[str], steps: list[dict[str, object]], continue_on_error: bool) -> bool:
+def run_or_record(
+    command: list[str], steps: list[dict[str, object]], continue_on_error: bool
+) -> bool:
     """Compatibility helper for sequential command execution."""
     result = run_tool(command)
     steps.append(result)
@@ -572,7 +584,9 @@ def run_or_record(command: list[str], steps: list[dict[str, object]], continue_o
     return True
 
 
-def print_plan_table(workshop_root: Path, planned: list[dict[str, object]], skipped_count: int) -> None:
+def print_plan_table(
+    workshop_root: Path, planned: list[dict[str, object]], skipped_count: int
+) -> None:
     """Print dry-run work estimates in aligned columns."""
     print(f"workshop_root={workshop_root}")
     print(f"planned_mods={len(planned)}")
@@ -664,8 +678,7 @@ def write_report_index(current_report: Path, run_summary: dict[str, object]) -> 
         "auto_process": (reports_root / "auto_process", "*.json"),
     }
     latest = {
-        name: latest_report(folder, pattern)
-        for name, (folder, pattern) in categories.items()
+        name: latest_report(folder, pattern) for name, (folder, pattern) in categories.items()
     }
     payload = {
         "updated_at": datetime.now().isoformat(timespec="seconds"),
@@ -881,13 +894,9 @@ def build_commands(
     rel_keys_dir = Path(args.keys_root) / mod["slug"]
     keys_dir_arg = str(rel_keys_dir)
     if args.dry_run:
-        commands: list[dict[str, object]] = [
-            skip_step("extract_keys", "dry-run mode")
-        ]
+        commands: list[dict[str, object]] = [skip_step("extract_keys", "dry-run mode")]
     elif args.use_cache and cache_hit(mod, keys_dir_arg, cache, args.force):
-        commands = [
-            skip_step("extract_keys", "source unchanged and key CSVs exist")
-        ]
+        commands = [skip_step("extract_keys", "source unchanged and key CSVs exist")]
     else:
         commands = [
             command_step(
@@ -961,7 +970,10 @@ def build_commands(
                 )
             )
         else:
-            print(f"warning: --translate skipped for {mod['mod_id']}: api_key.txt not found", flush=True)
+            print(
+                f"warning: --translate skipped for {mod['mod_id']}: api_key.txt not found",
+                flush=True,
+            )
             commands.append(skip_step("translate_keys", "api_key.txt not found"))
             commands.append(skip_step("validate_auto_key_tokens", "api_key.txt not found"))
 
@@ -983,7 +995,9 @@ def build_commands(
             translation_cmd.append("--dry-run")
         commands.append(
             command_step(
-                "translation_apply" if args.apply_translations and not args.dry_run else "translation_dry_run",
+                "translation_apply"
+                if args.apply_translations and not args.dry_run
+                else "translation_dry_run",
                 translation_cmd,
             )
         )
@@ -993,16 +1007,16 @@ def build_commands(
             command_step(
                 "validate_outputs",
                 [
-                sys.executable,
-                str(validate_tool),
-                mod["mod_id"],
-                keys_dir_arg,
-                "--workshop-root",
-                str(workshop_root),
-                "--report-dir",
-                "maintenance/reports/validation",
-                "--output-root",
-                str(output_root(mod["mod_id"], mod["name"], integrated)),
+                    sys.executable,
+                    str(validate_tool),
+                    mod["mod_id"],
+                    keys_dir_arg,
+                    "--workshop-root",
+                    str(workshop_root),
+                    "--report-dir",
+                    "maintenance/reports/validation",
+                    "--output-root",
+                    str(output_root(mod["mod_id"], mod["name"], integrated)),
                 ],
             )
         )
@@ -1012,15 +1026,15 @@ def build_commands(
             command_step(
                 "prepare_conflicts",
                 [
-                sys.executable,
-                str(conflict_tool),
-                mod["mod_id"],
-                keys_dir_arg,
-                "--prepare",
-                "--workshop-root",
-                str(workshop_root),
-                "--report-dir",
-                "maintenance/reports/conflict_resolution",
+                    sys.executable,
+                    str(conflict_tool),
+                    mod["mod_id"],
+                    keys_dir_arg,
+                    "--prepare",
+                    "--workshop-root",
+                    str(workshop_root),
+                    "--report-dir",
+                    "maintenance/reports/conflict_resolution",
                 ],
             )
         )
@@ -1070,7 +1084,10 @@ def process_mod(
             result = skipped_result(step)
             steps.append(result)
             if not args.quiet:
-                print(f"[{mod['mod_id']}] step {index}/{len(commands)} {step_name} skipped ({result['reason']})", flush=True)
+                print(
+                    f"[{mod['mod_id']}] step {index}/{len(commands)} {step_name} skipped ({result['reason']})",
+                    flush=True,
+                )
             continue
         command = list(step["command"])
         if not args.quiet:
@@ -1081,7 +1098,9 @@ def process_mod(
         ok = result["returncode"] == 0 or args.continue_on_error
         status = "ok" if result["returncode"] == 0 else f"failed rc={result['returncode']}"
         if not args.quiet:
-            print(f"[{mod['mod_id']}] step {index}/{len(commands)} {step_name} {status}", flush=True)
+            print(
+                f"[{mod['mod_id']}] step {index}/{len(commands)} {step_name} {status}", flush=True
+            )
         if not ok:
             break
     return {
@@ -1092,6 +1111,155 @@ def process_mod(
         "ok": all(step["returncode"] == 0 for step in steps),
         "steps": steps,
     }
+
+
+def collect_plans(
+    mods: list[dict[str, str]],
+    args: argparse.Namespace,
+    workshop_root: Path,
+    extract_tool: Path,
+    reference_tool: Path,
+    export_localisation: Path,
+    cache: dict[str, object],
+    workers: int,
+) -> list[dict[str, object]]:
+    """Run plan_mod for every mod, sequentially or across worker threads."""
+    if workers == 1:
+        return [
+            plan_mod(
+                mod, args, workshop_root, extract_tool, reference_tool, export_localisation, cache
+            )
+            for mod in mods
+        ]
+
+    planned: list[dict[str, object]] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        future_to_mod = {
+            executor.submit(
+                plan_mod,
+                mod,
+                args,
+                workshop_root,
+                extract_tool,
+                reference_tool,
+                export_localisation,
+                cache,
+            ): mod
+            for mod in mods
+        }
+        for future in concurrent.futures.as_completed(future_to_mod):
+            mod = future_to_mod[future]
+            try:
+                planned.append(future.result())
+            except Exception as exc:
+                planned.append(
+                    {
+                        "mod_id": mod["mod_id"],
+                        "name": mod["name"],
+                        "root": mod["root"],
+                        "status": f"failed: {exc!r}",
+                        "work_files": 0,
+                        "skip_files": 0,
+                        "created_files": 0,
+                        "updated_files": 0,
+                        "unchanged_files": 0,
+                        "processed_keys": 0,
+                        "english_fallback_files": 0,
+                        "missing_key_files": 0,
+                        "conflict_key_files": 0,
+                    }
+                )
+    return planned
+
+
+def run_plan(
+    args: argparse.Namespace,
+    workshop_root: Path,
+    timestamp: str,
+    mods: list[dict[str, str]],
+    counts: dict[str, int],
+    total_mod_dirs: int,
+    all_eligible_mods: list[dict[str, str]],
+    skipped_no_english: int,
+    workers: int,
+    cache: dict[str, object],
+    reports_root: Path,
+    extract_tool: Path,
+    reference_tool: Path,
+    export_localisation: Path,
+) -> int:
+    """Estimate work via dry-run, write a plan report, and print a summary."""
+    planned = collect_plans(
+        mods, args, workshop_root, extract_tool, reference_tool, export_localisation, cache, workers
+    )
+    planned.sort(key=lambda item: str(item["mod_id"]))
+    failed_plans = [row for row in planned if row.get("status") != "ok"]
+    payload = {
+        "timestamp": timestamp,
+        "mode": "plan",
+        "workshop_root": str(workshop_root),
+        "total_mod_folders": total_mod_dirs,
+        "target_mods": len(all_eligible_mods),
+        "selected_mods": len(mods),
+        "planned_mods": len(planned),
+        "skipped_no_english": skipped_no_english,
+        "classification_counts": counts,
+        "workers": workers,
+        "use_cache": args.use_cache,
+        "totals": {
+            "work_files": sum(int(row.get("work_files", 0) or 0) for row in planned),
+            "skip_files": sum(int(row.get("skip_files", 0) or 0) for row in planned),
+            "created_files": sum(int(row.get("created_files", 0) or 0) for row in planned),
+            "updated_files": sum(int(row.get("updated_files", 0) or 0) for row in planned),
+            "unchanged_files": sum(int(row.get("unchanged_files", 0) or 0) for row in planned),
+            "processed_keys": sum(int(row.get("processed_keys", 0) or 0) for row in planned),
+            "english_fallback_files": sum(
+                int(row.get("english_fallback_files", 0) or 0) for row in planned
+            ),
+            "missing_key_files": sum(int(row.get("missing_key_files", 0) or 0) for row in planned),
+            "conflict_key_files": sum(
+                int(row.get("conflict_key_files", 0) or 0) for row in planned
+            ),
+        },
+        "mods": planned,
+    }
+    plan_report_path = reports_root / f"auto_process_plan_{timestamp}.json"
+    payload["plan_report"] = str(plan_report_path)
+    plan_report_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8-sig"
+    )
+    if args.use_cache:
+        for row in planned:
+            extract_result = row.get("extract")
+            if isinstance(extract_result, dict):
+                update_cache_from_item(
+                    cache,
+                    {
+                        "mod_id": row.get("mod_id", ""),
+                        "name": row.get("name", ""),
+                        "root": row.get("root", ""),
+                        "keys_dir": row.get("keys_dir", ""),
+                        "steps": [extract_result],
+                    },
+                )
+        save_cache(cache)
+    index_json, index_md = write_report_index(
+        plan_report_path,
+        {
+            **payload,
+            "processed": planned,
+            "failed": len(failed_plans),
+        },
+    )
+    if args.plan_json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        print_plan_table(workshop_root, planned, skipped_no_english)
+        print("totals=" + json.dumps(payload["totals"], ensure_ascii=False))
+        print(f"plan_report={plan_report_path}")
+        print(f"report_index={index_json}")
+        print(f"report_index_md={index_md}")
+    return 1 if failed_plans else 0
 
 
 def main() -> int:
@@ -1126,7 +1294,9 @@ def main() -> int:
     )
 
     if not args.quiet:
-        print_discovery_summary(workshop_root, total_mod_dirs, len(all_eligible_mods), skipped_no_english, counts)
+        print_discovery_summary(
+            workshop_root, total_mod_dirs, len(all_eligible_mods), skipped_no_english, counts
+        )
         print(f"mode={effective_mode}", flush=True)
         print(f"workers={workers}", flush=True)
         print(f"use_cache={args.use_cache}", flush=True)
@@ -1162,111 +1332,22 @@ def main() -> int:
     conflict_tool = TOOLS_ROOT / "resolve_conflict_translations.py"
 
     if args.plan:
-        if workers == 1:
-            planned = [
-                plan_mod(mod, args, workshop_root, extract_tool, reference_tool, export_localisation, cache)
-                for mod in mods
-            ]
-        else:
-            planned = []
-            with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-                future_to_mod = {
-                    executor.submit(
-                        plan_mod,
-                        mod,
-                        args,
-                        workshop_root,
-                        extract_tool,
-                        reference_tool,
-                        export_localisation,
-                        cache,
-                    ): mod
-                    for mod in mods
-                }
-                for future in concurrent.futures.as_completed(future_to_mod):
-                    mod = future_to_mod[future]
-                    try:
-                        planned.append(future.result())
-                    except Exception as exc:
-                        planned.append(
-                            {
-                                "mod_id": mod["mod_id"],
-                                "name": mod["name"],
-                                "root": mod["root"],
-                                "status": f"failed: {exc!r}",
-                                "work_files": 0,
-                                "skip_files": 0,
-                                "created_files": 0,
-                                "updated_files": 0,
-                                "unchanged_files": 0,
-                                "processed_keys": 0,
-                                "english_fallback_files": 0,
-                                "missing_key_files": 0,
-                                "conflict_key_files": 0,
-                            }
-                        )
-        planned.sort(key=lambda item: str(item["mod_id"]))
-        failed_plans = [row for row in planned if row.get("status") != "ok"]
-        payload = {
-            "timestamp": timestamp,
-            "mode": "plan",
-            "workshop_root": str(workshop_root),
-            "total_mod_folders": total_mod_dirs,
-            "target_mods": len(all_eligible_mods),
-            "selected_mods": len(mods),
-            "planned_mods": len(planned),
-            "skipped_no_english": skipped_no_english,
-            "classification_counts": counts,
-            "workers": workers,
-            "use_cache": args.use_cache,
-            "totals": {
-                "work_files": sum(int(row.get("work_files", 0) or 0) for row in planned),
-                "skip_files": sum(int(row.get("skip_files", 0) or 0) for row in planned),
-                "created_files": sum(int(row.get("created_files", 0) or 0) for row in planned),
-                "updated_files": sum(int(row.get("updated_files", 0) or 0) for row in planned),
-                "unchanged_files": sum(int(row.get("unchanged_files", 0) or 0) for row in planned),
-                "processed_keys": sum(int(row.get("processed_keys", 0) or 0) for row in planned),
-                "english_fallback_files": sum(int(row.get("english_fallback_files", 0) or 0) for row in planned),
-                "missing_key_files": sum(int(row.get("missing_key_files", 0) or 0) for row in planned),
-                "conflict_key_files": sum(int(row.get("conflict_key_files", 0) or 0) for row in planned),
-            },
-            "mods": planned,
-        }
-        plan_report_path = reports_root / f"auto_process_plan_{timestamp}.json"
-        payload["plan_report"] = str(plan_report_path)
-        plan_report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8-sig")
-        if args.use_cache:
-            for row in planned:
-                extract_result = row.get("extract")
-                if isinstance(extract_result, dict):
-                    update_cache_from_item(
-                        cache,
-                        {
-                            "mod_id": row.get("mod_id", ""),
-                            "name": row.get("name", ""),
-                            "root": row.get("root", ""),
-                            "keys_dir": row.get("keys_dir", ""),
-                            "steps": [extract_result],
-                        },
-                    )
-            save_cache(cache)
-        index_json, index_md = write_report_index(
-            plan_report_path,
-            {
-                **payload,
-                "processed": planned,
-                "failed": len(failed_plans),
-            },
+        return run_plan(
+            args,
+            workshop_root,
+            timestamp,
+            mods,
+            counts,
+            total_mod_dirs,
+            all_eligible_mods,
+            skipped_no_english,
+            workers,
+            cache,
+            reports_root,
+            extract_tool,
+            reference_tool,
+            export_localisation,
         )
-        if args.plan_json:
-            print(json.dumps(payload, ensure_ascii=False, indent=2))
-        else:
-            print_plan_table(workshop_root, planned, skipped_no_english)
-            print("totals=" + json.dumps(payload["totals"], ensure_ascii=False))
-            print(f"plan_report={plan_report_path}")
-            print(f"report_index={index_json}")
-            print(f"report_index_md={index_md}")
-        return 1 if failed_plans else 0
 
     summary: dict[str, object] = {
         "timestamp": timestamp,
@@ -1292,7 +1373,9 @@ def main() -> int:
     }
 
     if args.apply_translations and workers > 1 and not args.quiet:
-        print("warning: --apply-translations with --workers > 1 can write multiple target files in parallel.")
+        print(
+            "warning: --apply-translations with --workers > 1 can write multiple target files in parallel."
+        )
 
     completed_count = 0
     failed_count = 0
@@ -1357,7 +1440,15 @@ def main() -> int:
                         "root": mod["root"],
                         "keys_dir": "",
                         "ok": False,
-                        "steps": [{"name": "auto_process", "command": [], "returncode": 1, "stdout": "", "stderr": repr(exc)}],
+                        "steps": [
+                            {
+                                "name": "auto_process",
+                                "command": [],
+                                "returncode": 1,
+                                "stdout": "",
+                                "stderr": repr(exc),
+                            }
+                        ],
                     }
                 summary["processed"].append(item)
                 if args.use_cache:

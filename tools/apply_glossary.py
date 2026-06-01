@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """glossary.csv 기반으로 korean_value의 잘못된 번역을 일괄 교체한다.
 
 단어장 형식 (tools/glossary.csv):
@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 import glob
 import shutil
-import datetime as dt
 from pathlib import Path
 
 from tool_config import translation_keys_root
@@ -73,7 +73,11 @@ def apply_glossary(
         fieldnames = list(reader.fieldnames or [])
         rows = list(reader)
 
-    if "key" not in fieldnames or "english_value" not in fieldnames or "korean_value" not in fieldnames:
+    if (
+        "key" not in fieldnames
+        or "english_value" not in fieldnames
+        or "korean_value" not in fieldnames
+    ):
         return 0, 0, []
 
     changed_rows = 0
@@ -93,12 +97,14 @@ def apply_glossary(
 
         if new_korean != korean_value:
             changed_rows += 1
-            changes.append({
-                "key": row.get("key", ""),
-                "rule": ", ".join(matched_rules),
-                "before": korean_value,
-                "after": new_korean,
-            })
+            changes.append(
+                {
+                    "key": row.get("key", ""),
+                    "rule": ", ".join(matched_rules),
+                    "before": korean_value,
+                    "after": new_korean,
+                }
+            )
             row["korean_value"] = new_korean
 
     if changed_rows > 0 and not dry_run:
@@ -123,7 +129,9 @@ def iter_csv_files(auto_keys_dir: Path, mods: list[str], files: list[str]) -> li
         for mod in mods:
             result.extend(sorted((auto_keys_dir / mod).rglob("*_key.csv")))
         return result
-    return sorted(Path(p) for p in glob.glob(str(auto_keys_dir / "**" / "*_key.csv"), recursive=True))
+    return sorted(
+        Path(p) for p in glob.glob(str(auto_keys_dir / "**" / "*_key.csv"), recursive=True)
+    )
 
 
 def main() -> int:
@@ -131,7 +139,9 @@ def main() -> int:
     parser.add_argument("--glossary", default=str(DEFAULT_GLOSSARY), help="단어장 CSV 경로")
     parser.add_argument("--auto-keys-dir", default=str(AUTO_KEYS_DIR))
     parser.add_argument("--mod", action="append", default=[], help="특정 모드만 처리. 반복 가능.")
-    parser.add_argument("--file", action="append", default=[], help="특정 CSV 파일만 처리. 반복 가능.")
+    parser.add_argument(
+        "--file", action="append", default=[], help="특정 CSV 파일만 처리. 반복 가능."
+    )
     parser.add_argument("--dry-run", action="store_true", help="실제 저장 없이 교체 대상만 출력.")
     args = parser.parse_args()
 
@@ -160,7 +170,11 @@ def main() -> int:
         total_rows += rows
         total_changed += changed
         if changed:
-            rel = filepath.relative_to(auto_keys_dir) if filepath.is_relative_to(auto_keys_dir) else filepath
+            rel = (
+                filepath.relative_to(auto_keys_dir)
+                if filepath.is_relative_to(auto_keys_dir)
+                else filepath
+            )
             print(f"\n[{rel}] {changed}행 교체{'예정' if args.dry_run else '완료'}")
             for c in changes:
                 print(f"  키:   {c['key']}")
@@ -169,7 +183,7 @@ def main() -> int:
                 print(f"  후:   {c['after']}")
                 print()
 
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"검사 행: {total_rows}  /  교체: {total_changed}")
     return 0
 

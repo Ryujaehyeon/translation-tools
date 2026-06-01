@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Import Korean reference translations into translation key CSV files.
 
 The tool scans Korean localisation files from known Korean translation mods,
@@ -25,7 +25,6 @@ from datetime import datetime
 from pathlib import Path
 
 from tool_config import translation_keys_root
-
 
 PACK_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUTO_KEYS_DIR = translation_keys_root()
@@ -121,11 +120,23 @@ def parse_args() -> argparse.Namespace:
             "Rows are matched by key and only korean_value is imported."
         ),
     )
-    parser.add_argument("--mod", action="append", default=[], help="Limit to an auto_keys mod folder. Can repeat.")
-    parser.add_argument("--file", action="append", default=[], help="Limit to a CSV path or filename. Can repeat.")
-    parser.add_argument("--limit-rows", type=int, default=0, help="Stop after N changed rows. 0 means unlimited.")
-    parser.add_argument("--overwrite-existing", action="store_true", help="Overwrite non-empty korean_value cells too.")
-    parser.add_argument("--dry-run", action="store_true", help="Report changes without writing CSV files.")
+    parser.add_argument(
+        "--mod", action="append", default=[], help="Limit to an auto_keys mod folder. Can repeat."
+    )
+    parser.add_argument(
+        "--file", action="append", default=[], help="Limit to a CSV path or filename. Can repeat."
+    )
+    parser.add_argument(
+        "--limit-rows", type=int, default=0, help="Stop after N changed rows. 0 means unlimited."
+    )
+    parser.add_argument(
+        "--overwrite-existing",
+        action="store_true",
+        help="Overwrite non-empty korean_value cells too.",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Report changes without writing CSV files."
+    )
     parser.add_argument(
         "--report-dir",
         default=str(DEFAULT_REPORT_DIR),
@@ -166,7 +177,9 @@ def resolve_reference_path(raw: str, workshop_root: Path) -> Path:
     return Path.cwd() / path
 
 
-def reference_sources_from_args(args: argparse.Namespace, workshop_root: Path) -> list[ReferenceSource]:
+def reference_sources_from_args(
+    args: argparse.Namespace, workshop_root: Path
+) -> list[ReferenceSource]:
     raw_sources: list[str]
     if args.reference_source:
         raw_sources = list(args.reference_source)
@@ -210,7 +223,9 @@ def discover_korean_files(mod_root: Path) -> list[Path]:
     return files
 
 
-def build_reference_index(sources: list[ReferenceSource]) -> tuple[dict[str, ReferenceValue], dict[str, object]]:
+def build_reference_index(
+    sources: list[ReferenceSource],
+) -> tuple[dict[str, ReferenceValue], dict[str, object]]:
     index: dict[str, ReferenceValue] = {}
     duplicate_count = 0
     scanned_files = 0
@@ -261,7 +276,9 @@ def build_reference_index(sources: list[ReferenceSource]) -> tuple[dict[str, Ref
     return index, summary
 
 
-def build_reference_index_from_csv_dirs(csv_dirs: list[Path]) -> tuple[dict[str, ReferenceValue], dict[str, object]]:
+def build_reference_index_from_csv_dirs(
+    csv_dirs: list[Path],
+) -> tuple[dict[str, ReferenceValue], dict[str, object]]:
     index: dict[str, ReferenceValue] = {}
     duplicate_count = 0
     scanned_files = 0
@@ -269,7 +286,11 @@ def build_reference_index_from_csv_dirs(csv_dirs: list[Path]) -> tuple[dict[str,
     per_source: list[dict[str, object]] = []
 
     for priority, csv_dir in enumerate(csv_dirs, start=1):
-        files = sorted(path for path in csv_dir.rglob("*_key.csv") if path.is_file()) if csv_dir.is_dir() else []
+        files = (
+            sorted(path for path in csv_dir.rglob("*_key.csv") if path.is_file())
+            if csv_dir.is_dir()
+            else []
+        )
         source_entries = 0
         source_added = 0
         for path in files:
@@ -478,7 +499,9 @@ def main() -> int:
 
     if not auto_keys_dir.is_dir():
         raise SystemExit(f"translation keys directory not found: {auto_keys_dir}")
-    needs_workshop_root = not reference_csv_dirs and any(re.fullmatch(r"\d+", source.identifier) for source in reference_sources)
+    needs_workshop_root = not reference_csv_dirs and any(
+        re.fullmatch(r"\d+", source.identifier) for source in reference_sources
+    )
     if needs_workshop_root and not workshop_root.is_dir():
         raise SystemExit(f"workshop root not found: {workshop_root}")
 
@@ -568,9 +591,9 @@ def main() -> int:
 
     label = "[dry-run]" if args.dry_run else "[적용]"
     mode = "덮어쓰기 포함" if args.overwrite_existing else "빈 칸만"
-    print(f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     print(f"  한국어 참조 가져오기 완료  {label}  ({mode})")
-    print(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     print(f"  참조 모드 고유 키   {reference_summary['unique_keys']:>8,}개")
     print(f"  대상 CSV 파일       {len(csv_files):>8,}개")
     print(f"  매칭된 행           {matched_total:>8,}행")
@@ -581,7 +604,7 @@ def main() -> int:
         print(f"  변경된 파일         {changed_files:>8,}개")
         print(f"  변경된 행           {changed_total:>8,}행")
     print(f"  토큰 이슈 행        {token_issue_total:>8,}행  (적용됨, 검수 필요)")
-    print(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     try:
         rel_csv = report_csv.relative_to(PACK_ROOT)
     except ValueError:

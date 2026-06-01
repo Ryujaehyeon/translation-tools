@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Translate Stellaris auto_keys CSV files with Claude or OpenAI.
 
 Default behavior is conservative:
@@ -33,7 +33,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from tool_config import translation_keys_root
-
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PACK_ROOT = SCRIPT_DIR.parent
@@ -215,24 +214,47 @@ class FileResult:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Translate auto_keys CSV files with OpenAI GPT-4.1 mini.")
+    parser = argparse.ArgumentParser(
+        description="Translate auto_keys CSV files with OpenAI GPT-4.1 mini."
+    )
     # 처리 범위 옵션 -------------------------------------------------------
     # translation keys 디렉토리 (기본: maintenance/tooling.ini)
     parser.add_argument("--auto-keys-dir", default=str(AUTO_KEYS_DIR))
     # 특정 모드 폴더만 처리. --mod GW --mod NSC 처럼 반복 가능
-    parser.add_argument("--mod", action="append", default=[], help="Limit to a mod folder. Can repeat.")
+    parser.add_argument(
+        "--mod", action="append", default=[], help="Limit to a mod folder. Can repeat."
+    )
     # 특정 CSV 파일명/경로만 처리. 파일명 만 넣어도 auto_keys 하위에서 검색
-    parser.add_argument("--file", action="append", default=[], help="Limit to a CSV path or filename. Can repeat.")
+    parser.add_argument(
+        "--file", action="append", default=[], help="Limit to a CSV path or filename. Can repeat."
+    )
     # 특정 로컬라이징 키만 처리. --key some_key --key other_key 처럼 반복 가능
-    parser.add_argument("--key", action="append", default=[], help="Limit to one localisation key. Can repeat.")
+    parser.add_argument(
+        "--key", action="append", default=[], help="Limit to one localisation key. Can repeat."
+    )
     # 작업량 제한 -----------------------------------------------------------
     # 번역 작업이 생긴 파일 N개만 처리하고 중단 (0 = 무제한)
-    parser.add_argument("--limit-files", type=int, default=0, help="Stop after N files with work. 0 means unlimited.")
+    parser.add_argument(
+        "--limit-files",
+        type=int,
+        default=0,
+        help="Stop after N files with work. 0 means unlimited.",
+    )
     # 번역/복사 합산 N행 이후 중단 (0 = 무제한)
-    parser.add_argument("--limit-rows", type=int, default=0, help="Stop after N translated/copied rows. 0 means unlimited.")
+    parser.add_argument(
+        "--limit-rows",
+        type=int,
+        default=0,
+        help="Stop after N translated/copied rows. 0 means unlimited.",
+    )
     # 시작/종료 행 -----------------------------------------------------------
     # 이 행(CSV 줄 번호, 헤더=1)부터 처리. 중간에 중단 후 재개할 때 사용
-    parser.add_argument("--start-row", type=int, default=2, help="CSV line number to start at. Header is line 1. Default: 2.")
+    parser.add_argument(
+        "--start-row",
+        type=int,
+        default=2,
+        help="CSV line number to start at. Header is line 1. Default: 2.",
+    )
     # 이 행까지만 처리 (포함). 'end'로 지정하면 파일 끝까지
     parser.add_argument(
         "--end-row",
@@ -241,7 +263,9 @@ def parse_args() -> argparse.Namespace:
     )
     # 번역 대상 선택 --------------------------------------------------------
     # 기본은 빈 korean_value만 채운다. 이 옵션을 주면 기존 번역도 덮어쓴다
-    parser.add_argument("--rewrite-existing", action="store_true", help="Overwrite existing korean_value cells too.")
+    parser.add_argument(
+        "--rewrite-existing", action="store_true", help="Overwrite existing korean_value cells too."
+    )
     # --rewrite-existing과 함께 사용: 의심스러운(미번역/영문그대로) 행만 재번역
     parser.add_argument(
         "--only-suspicious",
@@ -250,17 +274,36 @@ def parse_args() -> argparse.Namespace:
     )
     # dry-run / 샘플 모드 --------------------------------------------------
     # 실제 API 호출·파일 수정 없이 대상 행 수만 출력
-    parser.add_argument("--dry-run", action="store_true", help="Count work only; do not write files or call OpenAI.")
-    parser.add_argument("--dry-run-with-api", action="store_true", help="Call OpenAI but do not write files. For testing token masking/restoration.")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Count work only; do not write files or call OpenAI."
+    )
+    parser.add_argument(
+        "--dry-run-with-api",
+        action="store_true",
+        help="Call OpenAI but do not write files. For testing token masking/restoration.",
+    )
     # 원본 CSV를 수정하지 않고 N행만 번역해 별도 CSV로 저장 (품질 확인용)
-    parser.add_argument("--sample-rows", type=int, default=0, help="Translate N rows into a separate sample CSV only.")
+    parser.add_argument(
+        "--sample-rows",
+        type=int,
+        default=0,
+        help="Translate N rows into a separate sample CSV only.",
+    )
     parser.add_argument("--sample-output", default="", help="Sample CSV output path.")
     # 샘플 모드에서 기존 번역이 있는 행도 포함할지 여부
-    parser.add_argument("--sample-include-existing", action="store_true", help="Sample existing korean_value rows too.")
+    parser.add_argument(
+        "--sample-include-existing",
+        action="store_true",
+        help="Sample existing korean_value rows too.",
+    )
     # 번역 대상이 없는 파일도 로그에 출력할지 여부
-    parser.add_argument("--verbose-skips", action="store_true", help="Print files with no translatable rows.")
+    parser.add_argument(
+        "--verbose-skips", action="store_true", help="Print files with no translatable rows."
+    )
     # 모델·번역 품질 옵션 --------------------------------------------------
-    parser.add_argument("--model", default=DEFAULT_MODEL, help=f"OpenAI model. Default: {DEFAULT_MODEL}")
+    parser.add_argument(
+        "--model", default=DEFAULT_MODEL, help=f"OpenAI model. Default: {DEFAULT_MODEL}"
+    )
     # 번역 온도 (0.0~1.0). 기본값 0.2 — 일관성 우선
     parser.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE)
     # API 오류(네트워크, 서버 등) 시 최대 재시도 횟수
@@ -273,16 +316,42 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--api-key-file", default=str(DEFAULT_API_KEY_FILE))
     parser.add_argument("--guidelines-file", default=str(DEFAULT_GUIDELINES_FILE))
     # 번역 지침서를 시스템 프롬프트에 포함할 때 사용 (기본 비활성 — 코드가 토큰 보존을 보장)
-    parser.add_argument("--use-guidelines", action="store_true", help="Load maintenance/translation_guidelines.md into the OpenAI prompt. 기본: 토큰 포함 행에만 자동 적용.")
-    parser.add_argument("--no-glossary", action="store_true", help="용어집(term_glossary.csv)을 프롬프트에 포함하지 않는다.")
-    parser.add_argument("--glossary-file", default=str(DEFAULT_GLOSSARY_FILE), help="용어집 CSV 경로. 기본: maintenance/term_glossary.csv")
-    parser.add_argument("--extra-glossary", action="append", default=[], metavar="CSV", help="추가 용어집 CSV 경로. 반복 가능. 기본 용어집보다 우선 적용.")
+    parser.add_argument(
+        "--use-guidelines",
+        action="store_true",
+        help="Load maintenance/translation_guidelines.md into the OpenAI prompt. 기본: 토큰 포함 행에만 자동 적용.",
+    )
+    parser.add_argument(
+        "--no-glossary",
+        action="store_true",
+        help="용어집(term_glossary.csv)을 프롬프트에 포함하지 않는다.",
+    )
+    parser.add_argument(
+        "--glossary-file",
+        default=str(DEFAULT_GLOSSARY_FILE),
+        help="용어집 CSV 경로. 기본: maintenance/term_glossary.csv",
+    )
+    parser.add_argument(
+        "--extra-glossary",
+        action="append",
+        default=[],
+        metavar="CSV",
+        help="추가 용어집 CSV 경로. 반복 가능. 기본 용어집보다 우선 적용.",
+    )
     # Stellaris 토큰을 마커로 치환하지 않고 그대로 API에 전송 (테스트용)
-    parser.add_argument("--no-protect-tokens", action="store_true", help="Send Stellaris tokens to OpenAI without temporary masking.")
+    parser.add_argument(
+        "--no-protect-tokens",
+        action="store_true",
+        help="Send Stellaris tokens to OpenAI without temporary masking.",
+    )
     # 토큰만으로 구성된 행을 API 없이 그대로 복사하는 최적화를 끌 때 사용
     parser.add_argument("--no-copy-token-only", action="store_true")
     # 하드 토큰이 달라도 번역 결과를 저장 (검수 후 수동 수정을 전제로 할 때)
-    parser.add_argument("--allow-token-mismatch", action="store_true", help="Write output even when hard tokens differ.")
+    parser.add_argument(
+        "--allow-token-mismatch",
+        action="store_true",
+        help="Write output even when hard tokens differ.",
+    )
     # 보고서 저장 경로
     parser.add_argument("--report-dir", default=str(REPORT_DIR))
     # 검수 리포트 기반 선별 재번역 (review_report.py 가 생성한 CSV)
@@ -392,7 +461,6 @@ def strip_code_fence(text: str) -> str:
 
 
 @dataclass
-
 class CsvCell:
     """CSV 한 셀의 raw 상태를 보존하는 타입.
 
@@ -401,6 +469,7 @@ class CsvCell:
     quoted: raw가 따옴표로 감싸여 있었는지 여부.
     quote_noise: raw에 불필요한 다중 따옴표가 누적되었는지 여부.
     """
+
     raw: str
     inner: str
     quoted: bool
@@ -415,7 +484,9 @@ class CsvCell:
         s = raw.strip()
         quote_noise = has_quote_noise(s)
         if len(s) >= 2 and s[0] == '"' and s[-1] == '"':
-            return CsvCell(raw=raw, inner=strip_wrapping_quotes(s), quoted=True, quote_noise=quote_noise)
+            return CsvCell(
+                raw=raw, inner=strip_wrapping_quotes(s), quoted=True, quote_noise=quote_noise
+            )
         return CsvCell(raw=raw, inner=s, quoted=False, quote_noise=quote_noise)
 
     def with_translated(self, translated_inner: str) -> str:
@@ -439,7 +510,7 @@ def fix_section_sign_corruption(text: str) -> str:
     return _SECTION_SIGN_LOOKALIKE_RE.sub("§", text)
 
 
-_CSV_ROW_RE = re.compile(r'^[A-Za-z0-9_.\-]+\s*,\s*.+?\s*,\s*(.+)$', re.DOTALL)
+_CSV_ROW_RE = re.compile(r"^[A-Za-z0-9_.\-]+\s*,\s*.+?\s*,\s*(.+)$", re.DOTALL)
 
 
 def strip_prompt_echo(value: str) -> str:
@@ -457,9 +528,9 @@ def strip_prompt_echo(value: str) -> str:
     if text.startswith("__") and "key:" in text:
         m = re.search(r"\bkey\s*:\s*\S+\s+", text)
         if m:
-            extracted = text[m.end():].strip()
+            extracted = text[m.end() :].strip()
             if extracted:
-                print(f"  [경고] 프롬프트 에코 감지, 지시문 제거 후 번역 추출", flush=True)
+                print("  [경고] 프롬프트 에코 감지, 지시문 제거 후 번역 추출", flush=True)
                 text = extracted
 
     # AI가 CSV 행 전체를 반환한 경우 → 세 번째 열(korean_value)만 추출
@@ -564,7 +635,7 @@ def load_glossary(path: Path | None, extra_paths: list[Path] | None = None) -> d
     glossary: dict[str, str] = {}
     if path and path.is_file():
         _load_glossary_file(path, glossary)
-    for extra in (extra_paths or []):
+    for extra in extra_paths or []:
         if extra.is_file():
             _load_glossary_file(extra, glossary)
     return glossary
@@ -716,22 +787,27 @@ def strip_extra_color_codes(translation: str, source: str) -> str:
         # 원문에 color_code가 전혀 없으면 §X와 §! 코드만 제거, 내부 텍스트 보존
         result = re.sub(r"§[A-Za-z0-9#](.*?)§!", r"\1", translation, flags=re.DOTALL)
         return TOKEN_PATTERNS["color_code"].sub("", result)
+
     # 원문에 없는 §X...§! 쌍: §X와 §!만 제거하고 내부 텍스트 보존
     def _strip_pair_tags(m: re.Match[str]) -> str:
         opener = "§" + m.group(1)
         inner = m.group(2)
         if opener in src_codes:
-            return m.group(0)   # 원문에 있는 코드는 유지
-        return inner            # 없는 코드는 태그만 제거, 텍스트 보존
+            return m.group(0)  # 원문에 있는 코드는 유지
+        return inner  # 없는 코드는 태그만 제거, 텍스트 보존
+
     result = re.sub(r"§([A-Za-z0-9#])(.*?)§!", _strip_pair_tags, translation, flags=re.DOTALL)
+
     # 쌍 제거 후 남은 단독 §X(원문에 없는 것) 제거
     def _remove_if_absent(m: re.Match[str]) -> str:
         return m.group(0) if m.group(0) in src_codes else ""
+
     return TOKEN_PATTERNS["color_code"].sub(_remove_if_absent, result)
 
 
 # $TABBED_NEW_LINE$ ↔ \n 불일치: extra \n 수만큼 missing $TABBED_NEW_LINE$과 1:1 교체
 _TABBED_NL = "$TABBED_NEW_LINE$"
+
 
 def auto_patch_tokens(translation: str, source: str) -> str:
     """번역 후 규칙 기반으로 수정 가능한 토큰 불일치를 자동 보정한다.
@@ -760,8 +836,6 @@ def auto_patch_tokens(translation: str, source: str) -> str:
     missing_tabbed = [t for t in dr.get("missing", []) if t == _TABBED_NL]
     extra_nl = dn.get("extra", [])
     if missing_tabbed and len(missing_tabbed) == len(extra_nl):
-        # EN에 있는 \n의 위치(순서)를 구한다 — 이 위치의 \n은 건드리면 안 됨
-        en_nl_count = len(TOKEN_PATTERNS["escaped_newline"].findall(source))
         # KO에서 \n 토큰을 순서대로 스캔하면서, EN에 없는 것(extra)을 $TABBED_NEW_LINE$으로 교체
         # extra \n이 앞에서부터 몇 번째에 오는지 알 수 없으므로,
         # KO의 전체 \n 목록에서 EN 개수를 넘는 부분(오른쪽부터)을 교체
@@ -775,12 +849,13 @@ def auto_patch_tokens(translation: str, source: str) -> str:
         if len(positions_to_replace) == n_extra:
             # 뒤에서부터 교체 (인덱스 불변)
             for pos in reversed(positions_to_replace):
-                result = result[:pos] + _TABBED_NL + result[pos + 2:]  # \n = 2글자
+                result = result[:pos] + _TABBED_NL + result[pos + 2 :]  # \n = 2글자
 
     # P4: extra 아이콘(£word£) 제거 — EN에 없는 것만
     extra_icons = delta.get("icon", {}).get("extra", [])
     if extra_icons:
         src_icons = set(TOKEN_PATTERNS["icon"].findall(source))
+
         def _strip_extra_icon(m: re.Match[str]) -> str:
             tok = m.group(0)
             if tok in src_icons:
@@ -788,6 +863,7 @@ def auto_patch_tokens(translation: str, source: str) -> str:
             # £word£ → word (닫힘 없는 £word 형태 포함)
             inner = tok[1:-1] if tok.endswith("£") else tok[1:]
             return inner
+
         result = TOKEN_PATTERNS["icon"].sub(_strip_extra_icon, result)
 
     return result
@@ -943,7 +1019,10 @@ class TPMThrottle:
                     return
                 oldest_ts = self._window[0][0] if self._window else now
                 wait = max(0.5, 60.0 - (now - oldest_ts) + 1.0)
-            print(f"  [TPM 대기] 사용량 {used:,}/{self.tpm_limit:,} 토큰, {wait:.1f}초 대기...", flush=True)
+            print(
+                f"  [TPM 대기] 사용량 {used:,}/{self.tpm_limit:,} 토큰, {wait:.1f}초 대기...",
+                flush=True,
+            )
             time.sleep(wait)
 
     def record_actual(self, actual_tokens: int) -> None:
@@ -979,15 +1058,23 @@ class Translator:
         self.key_manager = key_manager or APIKeyManager(self.config.api_key_file)
         self.tpm_throttle = tpm_throttle
         self.translated_count = 0  # 성공적으로 번역된 행 수 (재시도 포함)
-        self.request_count = 0      # 실제 OpenAI API 요청 횟수 (재시도 포함)
+        self.request_count = 0  # 실제 OpenAI API 요청 횟수 (재시도 포함)
         # 시스템 프롬프트: 3단계
         #   system_prompt           — 토큰 없는 단순 텍스트용 (기본, 짧음)
         #   system_prompt_with_tokens — 토큰 포함 텍스트용 (토큰 규칙 추가)
         #   system_prompt_full      — 토큰 포함 + 가이드라인 (use_guidelines 시)
-        guideline_prompt = load_guidelines_prompt(self.config.guidelines_file) if self.config.use_guidelines else ""
+        guideline_prompt = (
+            load_guidelines_prompt(self.config.guidelines_file)
+            if self.config.use_guidelines
+            else ""
+        )
         self.system_prompt = SYSTEM_PROMPT
         self.system_prompt_with_tokens = SYSTEM_PROMPT_WITH_TOKENS
-        self.system_prompt_full = f"{SYSTEM_PROMPT_WITH_TOKENS}\n\n{guideline_prompt}" if guideline_prompt else SYSTEM_PROMPT_WITH_TOKENS
+        self.system_prompt_full = (
+            f"{SYSTEM_PROMPT_WITH_TOKENS}\n\n{guideline_prompt}"
+            if guideline_prompt
+            else SYSTEM_PROMPT_WITH_TOKENS
+        )
         # 용어집 로드 (번역 텍스트별 매칭에 사용)
         self.glossary = load_glossary(self.config.glossary_file, self.config.extra_glossary_files)
         # TPMThrottle에 실제 시스템 프롬프트 토큰 수 전달 (지침서 포함 후 확정)
@@ -998,13 +1085,17 @@ class Translator:
             try:
                 import anthropic as _anthropic
             except ModuleNotFoundError as exc:
-                raise TranslationFatalError("anthropic 패키지가 없습니다. `python -m pip install anthropic`를 실행하세요.") from exc
+                raise TranslationFatalError(
+                    "anthropic 패키지가 없습니다. `python -m pip install anthropic`를 실행하세요."
+                ) from exc
             self.client = _anthropic.Anthropic(api_key=self.key_manager.api_key)
         else:
             try:
                 from openai import OpenAI
             except ModuleNotFoundError as exc:
-                raise TranslationFatalError("openai 패키지가 없습니다. `python -m pip install openai`를 실행하세요.") from exc
+                raise TranslationFatalError(
+                    "openai 패키지가 없습니다. `python -m pip install openai`를 실행하세요."
+                ) from exc
             self.client = OpenAI(api_key=self.key_manager.api_key)
 
     def _build_user_prompt(
@@ -1039,7 +1130,13 @@ class Translator:
         lines += [f"key: {key}", f"english_value:\n{text}"]
         return "\n".join(lines)
 
-    def translate(self, key: str, text: str, protected: dict[str, str] | None = None, missing_tokens: list[str] | None = None) -> tuple[str, str, str]:
+    def translate(
+        self,
+        key: str,
+        text: str,
+        protected: dict[str, str] | None = None,
+        missing_tokens: list[str] | None = None,
+    ) -> tuple[str, str, str]:
         """한 행의 english_value를 OpenAI에 보내 한국어 번역을 받는다.
 
         반환: (번역 결과, system_prompt, user_prompt)
@@ -1075,7 +1172,9 @@ class Translator:
                         messages=[{"role": "user", "content": user_prompt}],
                     )
                     content = response.content[0].text if response.content else ""
-                    total_tokens = (response.usage.input_tokens or 0) + (response.usage.output_tokens or 0)
+                    total_tokens = (response.usage.input_tokens or 0) + (
+                        response.usage.output_tokens or 0
+                    )
                 else:
                     response = self.client.chat.completions.create(
                         model=self.config.model,
@@ -1104,15 +1203,26 @@ class Translator:
                 last_error = exc
                 message = str(exc)
                 lower = message.lower()
-                print(f"  [경고] API 번역 실패 (key={key}, 시도={attempt+1}/{max(1, self.config.max_retries)}): {console_text(message)}")
+                print(
+                    f"  [경고] API 번역 실패 (key={key}, 시도={attempt + 1}/{max(1, self.config.max_retries)}): {console_text(message)}"
+                )
                 # 복구 불가 오류: 모델명 오류, 접근 권한 없음 등
-                if "model_not_found" in lower or "does not exist" in lower or "invalid_request_error" in lower or "not_found_error" in lower:
+                if (
+                    "model_not_found" in lower
+                    or "does not exist" in lower
+                    or "invalid_request_error" in lower
+                    or "not_found_error" in lower
+                ):
                     raise TranslationFatalError(
                         f"모델을 찾을 수 없거나 접근 권한이 없습니다: {self.config.model}"
                     ) from exc
-                if any(token in lower for token in ("rate limit", "429", "temporarily unavailable", "timeout")):
+                if any(
+                    token in lower
+                    for token in ("rate limit", "429", "temporarily unavailable", "timeout")
+                ):
                     # API 응답에서 retry_after 시간을 파싱해 TPM throttle에 전달
                     import re as _re
+
                     retry_ms_match = _re.search(r"try again in (\d+)ms", message)
                     retry_ms = int(retry_ms_match.group(1)) if retry_ms_match else 5000
                     wait_sec = max(1.0, retry_ms / 1000.0) + 1.0
@@ -1148,7 +1258,9 @@ def iter_csv_files(auto_keys_dir: Path, mods: set[str], file_filters: list[str])
                 files.extend(mod_dir.rglob("*_key.csv"))
         return sorted(files)
     # 필터 없음: auto_keys 하위 모든 *_key.csv
-    return sorted(Path(p) for p in glob.glob(str(auto_keys_dir / "**" / "*_key.csv"), recursive=True))
+    return sorted(
+        Path(p) for p in glob.glob(str(auto_keys_dir / "**" / "*_key.csv"), recursive=True)
+    )
 
 
 def read_rows(path: Path) -> tuple[list[str], list[dict[str, str]]]:
@@ -1185,7 +1297,9 @@ def count_candidates(
         kor = CsvCell.parse(row.get("korean_value", ""))
         if kor.inner.strip() and not include_existing:
             continue
-        if has_source(eng.inner) and (not only_suspicious or is_suspicious_translation(eng.inner, kor.inner)):
+        if has_source(eng.inner) and (
+            not only_suspicious or is_suspicious_translation(eng.inner, kor.inner)
+        ):
             count += 1
     return count
 
@@ -1251,13 +1365,16 @@ def translate_value(
     last_user_prompt = ""
     missing_tokens: list[str] | None = None
     request_text, protected = (
-        protect_tokens(eng_cell.inner) if translator.config.protect_tokens
-        else (eng_cell.inner, {})
+        protect_tokens(eng_cell.inner) if translator.config.protect_tokens else (eng_cell.inner, {})
     )
     for attempt in range(attempts):
-        raw_translation, last_system_prompt, last_user_prompt = translator.translate(key, request_text, protected, missing_tokens)
+        raw_translation, last_system_prompt, last_user_prompt = translator.translate(
+            key, request_text, protected, missing_tokens
+        )
         restored = restore_protected_tokens(raw_translation, protected)
-        cleaned_inner = normalize_csv_cell(strip_prompt_echo(strip_code_fence(restored).strip()), source=eng_cell.inner)
+        cleaned_inner = normalize_csv_cell(
+            strip_prompt_echo(strip_code_fence(restored).strip()), source=eng_cell.inner
+        )
         cleaned_inner = strip_extra_color_codes(cleaned_inner, eng_cell.inner)
         cleaned_inner = auto_patch_tokens(cleaned_inner, eng_cell.inner)
         # API가 영문을 그대로 반환한 경우 단어집에서 직접 대체 시도
@@ -1268,8 +1385,7 @@ def translate_value(
             return translated_raw, None, last_system_prompt, last_user_prompt
         delta = token_delta(eng_cell.inner, cleaned_inner)
         delta_summary = ", ".join(
-            f"{t}: 누락={v['missing']} 추가={v['extra']}"
-            for t, v in delta.items()
+            f"{t}: 누락={v['missing']} 추가={v['extra']}" for t, v in delta.items()
         )
         print_block(
             f"  [토큰 불일치] {key} (재시도 {attempt + 1}/{attempts}): {console_text(delta_summary)}",
@@ -1280,7 +1396,9 @@ def translate_value(
         missing_tokens = [t for v in delta.values() for t in v.get("missing", [])]
         extra_tokens = [t for v in delta.values() for t in v.get("extra", [])]
         if extra_tokens:
-            missing_tokens = missing_tokens + [f"(원문에 없는 토큰 추가 금지: {', '.join(extra_tokens)})"]
+            missing_tokens = missing_tokens + [
+                f"(원문에 없는 토큰 추가 금지: {', '.join(extra_tokens)})"
+            ]
     return None, last_value, last_system_prompt, last_user_prompt
 
 
@@ -1349,7 +1467,9 @@ def process_csv_file(
         if not has_source(eng.inner):
             result.skipped_empty_english += 1
             continue
-        if only_suspicious and not (is_suspicious_translation(eng.inner, kor.inner) or kor.quote_noise):
+        if only_suspicious and not (
+            is_suspicious_translation(eng.inner, kor.inner) or kor.quote_noise
+        ):
             result.skipped_existing += 1  # suspicious 아닌 기존 번역 skip (skipped_existing에 합산)
             continue
         if should_stop(total_changed_so_far + changed_this_file, limit_rows):
@@ -1385,7 +1505,9 @@ def process_csv_file(
                 result.glossary_applied += 1
                 changed_this_file += 1
                 result.changed = True
-                print(f"  [단어집 대체] {key_name}: {console_text(eng.inner)} → {console_text(kor_direct)}")
+                print(
+                    f"  [단어집 대체] {key_name}: {console_text(eng.inner)} → {console_text(kor_direct)}"
+                )
             else:
                 api_candidates.append((line_number, row))
         else:
@@ -1428,7 +1550,9 @@ def process_csv_file(
         except Exception:
             pass
 
-    def collect_one(row: dict[str, str], future: "Future[tuple[str|None,str|None,str,str,Exception|None]]") -> None:
+    def collect_one(
+        row: dict[str, str], future: "Future[tuple[str|None,str|None,str,str,Exception|None]]"
+    ) -> None:
         # future 하나의 결과를 받아 저장·출력 처리
         nonlocal changed_this_file
         key = row.get("key", "").strip()
@@ -1439,43 +1563,58 @@ def process_csv_file(
             if isinstance(exc, TranslationFatalError):
                 raise exc
             result.failed += 1
-            result.issues.append({"key": key, "reason": "translation_failed", "english_value": eng.inner, "error": str(exc)})
+            result.issues.append(
+                {
+                    "key": key,
+                    "reason": "translation_failed",
+                    "english_value": eng.inner,
+                    "error": str(exc),
+                }
+            )
             print_block(
                 f"  [오류] 번역 실패 — key={key}",
                 원문=console_text(eng.inner),
                 에러=console_text(exc),
             )
-            _write_log(log_failure, {
-                "timestamp": ts,
-                "key": key,
-                "english_value": eng.inner,
-                "reason": "translation_error",
-                "error": str(exc),
-                "system_prompt": sys_prompt,
-                "user_prompt": usr_prompt,
-            })
+            _write_log(
+                log_failure,
+                {
+                    "timestamp": ts,
+                    "key": key,
+                    "english_value": eng.inner,
+                    "reason": "translation_error",
+                    "error": str(exc),
+                    "system_prompt": sys_prompt,
+                    "user_prompt": usr_prompt,
+                },
+            )
             return
         if translated_raw is None:
             result.skipped_token_mismatch += 1
             rejected_inner = CsvCell.parse(rejected_raw or "").inner
             delta = token_delta(eng.inner, rejected_inner) if rejected_inner else {}
-            result.issues.append({
-                "key": key,
-                "reason": "hard_token_mismatch",
-                "english_value": eng.inner,
-                "rejected_value": rejected_raw or "",
-                "token_delta": delta,
-            })
-            _write_log(log_failure, {
-                "timestamp": ts,
-                "key": key,
-                "english_value": eng.inner,
-                "reason": "hard_token_mismatch",
-                "rejected_value": rejected_raw or "",
-                "token_delta": delta,
-                "system_prompt": sys_prompt,
-                "user_prompt": usr_prompt,
-            })
+            result.issues.append(
+                {
+                    "key": key,
+                    "reason": "hard_token_mismatch",
+                    "english_value": eng.inner,
+                    "rejected_value": rejected_raw or "",
+                    "token_delta": delta,
+                }
+            )
+            _write_log(
+                log_failure,
+                {
+                    "timestamp": ts,
+                    "key": key,
+                    "english_value": eng.inner,
+                    "reason": "hard_token_mismatch",
+                    "rejected_value": rejected_raw or "",
+                    "token_delta": delta,
+                    "system_prompt": sys_prompt,
+                    "user_prompt": usr_prompt,
+                },
+            )
             return
         with save_lock:
             row["korean_value"] = translated_raw
@@ -1487,23 +1626,35 @@ def process_csv_file(
                 done, total = progress
                 done += result.translated + result.copied_token_only
                 pct = done / total * 100 if total else 0
-                print_block(f"  [번역 완료] {key}  ({done}/{total}, {pct:.1f}%)", 원문=console_text(eng.inner), 번역=console_text(kor_inner))
+                print_block(
+                    f"  [번역 완료] {key}  ({done}/{total}, {pct:.1f}%)",
+                    원문=console_text(eng.inner),
+                    번역=console_text(kor_inner),
+                )
             else:
-                print_block(f"  [번역 완료] {key}", 원문=console_text(eng.inner), 번역=console_text(kor_inner))
-            _write_log(log_success, {
-                "timestamp": ts,
-                "key": key,
-                "english_value": eng.inner,
-                "korean_value": kor_inner,
-                "system_prompt": sys_prompt,
-                "user_prompt": usr_prompt,
-            })
+                print_block(
+                    f"  [번역 완료] {key}",
+                    원문=console_text(eng.inner),
+                    번역=console_text(kor_inner),
+                )
+            _write_log(
+                log_success,
+                {
+                    "timestamp": ts,
+                    "key": key,
+                    "english_value": eng.inner,
+                    "korean_value": kor_inner,
+                    "system_prompt": sys_prompt,
+                    "user_prompt": usr_prompt,
+                },
+            )
             if not save_at_end:
                 do_save()
 
-    interrupted = False
     # in_flight: deque[(row, future)], 최대 workers개
-    in_flight: deque[tuple[dict[str, str], Future[tuple[str | None, str | None, str, str, Exception | None]]]] = deque()
+    in_flight: deque[
+        tuple[dict[str, str], Future[tuple[str | None, str | None, str, str, Exception | None]]]
+    ] = deque()
 
     with ThreadPoolExecutor(max_workers=max(1, workers)) as executor:
         try:
@@ -1535,7 +1686,6 @@ def process_csv_file(
                 collect_one(oldest_row, oldest_future)
 
         except KeyboardInterrupt:
-            interrupted = True
             fatal_event.set()
             print("\n  [중단] Ctrl+C 감지 — 이미 요청한 항목 응답 대기 중...")
             # in_flight에 남은 것(최대 workers개)만 완료 대기 후 저장
@@ -1549,7 +1699,7 @@ def process_csv_file(
                             result.translated += 1
                             changed_this_file += 1
                             result.changed = True
-                            print(f"  [저장] {oldest_row.get('key','')}")
+                            print(f"  [저장] {oldest_row.get('key', '')}")
                             if not save_at_end:
                                 do_save()
                 except Exception:
@@ -1579,7 +1729,9 @@ def write_sample_csv(path: Path, rows: list[dict[str, str]]) -> None:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
-            writer.writerow({field: normalize_csv_cell(row.get(field, "") or "") for field in fieldnames})
+            writer.writerow(
+                {field: normalize_csv_cell(row.get(field, "") or "") for field in fieldnames}
+            )
 
 
 def translate_sample_file(
@@ -1605,7 +1757,11 @@ def translate_sample_file(
     """
     result = FileResult(path=str(filepath))
     _, rows = read_rows(filepath)
-    rel_file = str(filepath.relative_to(auto_keys_dir)) if filepath.is_relative_to(auto_keys_dir) else str(filepath)
+    rel_file = (
+        str(filepath.relative_to(auto_keys_dir))
+        if filepath.is_relative_to(auto_keys_dir)
+        else str(filepath)
+    )
 
     # ── 대상 행 수집 ──────────────────────────────────────────────────────
     # (line_number, key, eng_cell, kor_inner)
@@ -1625,7 +1781,9 @@ def translate_sample_file(
         if not has_source(eng.inner):
             result.skipped_empty_english += 1
             continue
-        if only_suspicious and not (is_suspicious_translation(eng.inner, kor.inner) or kor.quote_noise):
+        if only_suspicious and not (
+            is_suspicious_translation(eng.inner, kor.inner) or kor.quote_noise
+        ):
             result.skipped_existing += 1
             continue
         if sample_rows and len(candidates) >= sample_rows:
@@ -1634,7 +1792,9 @@ def translate_sample_file(
         candidates.append((line_number, key, eng, kor.inner))
 
     # ── 토큰 전용 행은 API 없이 즉시 처리 ────────────────────────────────
-    token_results: dict[int, tuple[str, str, str]] = {}  # line_number → (sample_inner, status, note)
+    token_results: dict[
+        int, tuple[str, str, str]
+    ] = {}  # line_number → (sample_inner, status, note)
     api_candidates: list[tuple[int, str, CsvCell, str]] = []
     for line_number, key, eng, kor_inner in candidates:
         if copy_token_only and is_token_only(eng.inner):
@@ -1867,7 +2027,9 @@ def main() -> int:
     if args.dry_run_with_api:
         print("모드: dry-run-with-api (API 호출 O, 파일 수정 없음 / 토큰 마스킹 테스트용)")
     if sample_mode:
-        print(f"모드: sample dry-run (원본 CSV 수정 없음, 최대 {args.sample_rows}행 OpenAI 번역 후 별도 CSV 저장)")
+        print(
+            f"모드: sample dry-run (원본 CSV 수정 없음, 최대 {args.sample_rows}행 OpenAI 번역 후 별도 CSV 저장)"
+        )
 
     # ── Translator 초기화 ─────────────────────────────────────────────────
     translator: Translator | None = None
@@ -1890,13 +2052,15 @@ def main() -> int:
             throttle = TPMThrottle(args.tpm_limit, args.workers) if args.tpm_limit > 0 else None
             if throttle:
                 print(f"TPM throttle: 한도 {args.tpm_limit:,}토큰/분 / workers {args.workers}")
-            translator = Translator(APIKeyManager(config.api_key_file), config, tpm_throttle=throttle)
+            translator = Translator(
+                APIKeyManager(config.api_key_file), config, tpm_throttle=throttle
+            )
         except (ValueError, TranslationFatalError) as exc:
             print(f"에러: {exc}")
             return 2
 
-    files_processed = 0     # 번역 작업이 실제로 생긴 파일 수
-    total_changed = 0       # 전체 변경(번역+복사) 행 수
+    files_processed = 0  # 번역 작업이 실제로 생긴 파일 수
+    total_changed = 0  # 전체 변경(번역+복사) 행 수
     interrupted = False
     file_results: list[FileResult] = []
     # 실시간 latest.json 갱신용 공통 payload 베이스 (루프에서 재사용)
@@ -1915,7 +2079,9 @@ def main() -> int:
         "end_row": args.end_row,
     }
     sample_rows: list[dict[str, str]] = []
-    sample_output_path = sample_path_from_arg(args.sample_output, report_dir) if sample_mode else None
+    sample_output_path = (
+        sample_path_from_arg(args.sample_output, report_dir) if sample_mode else None
+    )
     key_filter = set(args.key)
     # --from-report / --from-worklist 일 때 전체 진행률 추적용
     if args.from_report is not None:
@@ -1951,7 +2117,8 @@ def main() -> int:
             # 실제 번역 전에 대상 행 수를 세서 작업 없는 파일은 건너뜀 (API 절약)
             preflight_candidates = count_candidates(
                 filepath,
-                include_existing=args.rewrite_existing or (sample_mode and args.sample_include_existing),
+                include_existing=args.rewrite_existing
+                or (sample_mode and args.sample_include_existing),
                 only_suspicious=args.only_suspicious,
                 start_row=args.start_row,
                 end_row=end_row,
@@ -1960,13 +2127,19 @@ def main() -> int:
                 continue
 
             set_current_task(filepath)
-            rel = filepath.relative_to(auto_keys_dir) if filepath.is_relative_to(auto_keys_dir) else filepath
+            rel = (
+                filepath.relative_to(auto_keys_dir)
+                if filepath.is_relative_to(auto_keys_dir)
+                else filepath
+            )
             file_idx = len(file_results) + 1
             total_files = len(csv_files)
             if progress_total:
                 progress_done = sum(r.translated + r.copied_token_only for r in file_results)
                 pct = progress_done / progress_total * 100
-                print(f"[{file_idx}/{total_files}] 처리 중: {rel}  ({progress_done}/{progress_total} 키, {pct:.1f}%)")
+                print(
+                    f"[{file_idx}/{total_files}] 처리 중: {rel}  ({progress_done}/{progress_total} 키, {pct:.1f}%)"
+                )
             else:
                 print(f"[{file_idx}/{total_files}] 처리 중: {rel}")
             if sample_mode:
@@ -2018,17 +2191,24 @@ def main() -> int:
             file_results.append(result)
             # 파일 완료마다 latest.json 실시간 갱신
             if not sample_mode and not args.dry_run:
-                write_latest(report_dir, {
-                    **_report_base,
-                    "files_seen": len(csv_files),
-                    "files_processed_with_work": files_processed,
-                    "total_changed": total_changed,
-                    "api_translated": translator.translated_count if translator else 0,
-                    "api_requests": translator.request_count if translator else 0,
-                    "interrupted": False,
-                    "files": [r.__dict__ for r in file_results],
-                })
-            last_row_info = f", last_processed_row={result.last_processed_row}" if result.last_processed_row else ""
+                write_latest(
+                    report_dir,
+                    {
+                        **_report_base,
+                        "files_seen": len(csv_files),
+                        "files_processed_with_work": files_processed,
+                        "total_changed": total_changed,
+                        "api_translated": translator.translated_count if translator else 0,
+                        "api_requests": translator.request_count if translator else 0,
+                        "interrupted": False,
+                        "files": [r.__dict__ for r in file_results],
+                    },
+                )
+            last_row_info = (
+                f", last_processed_row={result.last_processed_row}"
+                if result.last_processed_row
+                else ""
+            )
             print(
                 "  -> "
                 f"candidates={result.candidates}, translated={result.translated}, "

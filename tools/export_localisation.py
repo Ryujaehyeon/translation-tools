@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Build Korean localisation files from per-file key CSVs.
 
 This tool turns the extracted key CSV tree into real `localisation/korean`
@@ -25,12 +25,14 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-
+from tool_config import (
+    PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
+)
+from tool_config import (
+    resolve_pack_path,
+)
 from tool_config import (
     workshop_root as _configured_workshop_root,
-    PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
-    resolve_pack_path,
-    english_source_root,
 )
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
@@ -84,8 +86,6 @@ def write_text(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8-sig", newline="\n")
 
 
-
-
 def parse_entries(path: Path) -> dict[str, str]:
     """Parse a localisation file into key -> rendered line.
 
@@ -109,7 +109,9 @@ def parse_entries(path: Path) -> dict[str, str]:
     return entries
 
 
-def build_translation_index(korean_root: Path) -> tuple[dict[str, str], dict[str, list[dict[str, object]]]]:
+def build_translation_index(
+    korean_root: Path,
+) -> tuple[dict[str, str], dict[str, list[dict[str, object]]]]:
     """Scan all Korean files and split unique translations from conflicts.
 
     A key with exactly one distinct rendered value is safe to reuse. A key with
@@ -211,7 +213,7 @@ def render_from_csv_value(key: str, raw: str) -> str:
         # Escape only literal backslashes that are NOT part of a recognised
         # Stellaris escape sequence (\n, \t, \", \\).  A simple way is to
         # escape lone backslashes (not already followed by n/t/"/\).
-        escaped = re.sub(r'\\(?![nt"\\])', r'\\\\', stripped)
+        escaped = re.sub(r'\\(?![nt"\\])', r"\\\\", stripped)
         escaped = escaped.replace('"', '\\"')
         stripped = f'"{escaped}"'
     return f" {key}:0 {stripped}"
@@ -345,9 +347,7 @@ def main() -> int:
         if fallback:
             report["english_fallback_keys"][rel_target] = fallback
         if conflicted:
-            report["conflict_keys"][rel_target] = {
-                key: global_conflicts[key] for key in conflicted
-            }
+            report["conflict_keys"][rel_target] = {key: global_conflicts[key] for key in conflicted}
 
         existing = read_text(target_path) if target_path.exists() else None
         if existing == rendered:

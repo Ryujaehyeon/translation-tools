@@ -34,12 +34,11 @@ import io
 import shutil
 import sys
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
 from tool_config import translation_keys_root
-
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTO_KEYS_DIR = translation_keys_root()
@@ -47,6 +46,7 @@ BACKUP_ROOT = ROOT / "maintenance" / "backups" / "fix_quote_issues"
 
 
 # ── 따옴표 보정 함수 ───────────────────────────────────────────────────────────
+
 
 def fix_imbalance(value: str) -> tuple[str, bool]:
     """앞뒤 따옴표 개수가 불균형하면 전부 제거 후 내용만 반환.
@@ -98,6 +98,7 @@ def fix_missing_quotes(english_value: str, korean_value: str) -> tuple[str, bool
 
 # ── CSV 읽기/쓰기 ─────────────────────────────────────────────────────────────
 
+
 def read_csv_rows(path: Path) -> tuple[list[str], list[dict[str, str]]]:
     """헤더와 전체 행을 읽어 반환."""
     with path.open("r", encoding="utf-8-sig", newline="") as f:
@@ -139,6 +140,7 @@ def csv_cell_literal(value: str) -> str:
 
 # ── 보정 핵심 로직 ────────────────────────────────────────────────────────────
 
+
 @dataclass
 class FileFixResult:
     path: Path
@@ -161,8 +163,10 @@ def fix_csv_file(path: Path, dry_run: bool) -> FileFixResult:
 
     def _show(kind: str, key: str, field: str, before: str, after: str) -> None:
         enc = getattr(sys.stdout, "encoding", None) or "utf-8"
+
         def s(v: str) -> str:
             return v.encode(enc, errors="backslashreplace").decode(enc, errors="replace")
+
         print(f"  [{kind}] {key} / {field}")
         print(f"    전: {s(csv_cell_literal(before))}")
         print(f"    후: {s(csv_cell_literal(after))}")
@@ -223,6 +227,7 @@ def fix_csv_file(path: Path, dry_run: bool) -> FileFixResult:
 
 # ── 모드 1: report CSV를 읽어 대상 파일만 보정 ───────────────────────────────
 
+
 def fix_from_report(report_paths: list[Path], auto_keys_dir: Path, dry_run: bool) -> None:
     # 리포트에서 (mod, file) 조합을 수집
     affected: dict[Path, set[str]] = defaultdict(set)
@@ -251,7 +256,9 @@ def fix_from_report(report_paths: list[Path], auto_keys_dir: Path, dry_run: bool
         result = fix_csv_file(csv_path, dry_run)
         if result.total_fixed:
             mode = "[dry-run]" if dry_run else ""
-            print(f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건 보정")
+            print(
+                f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건 보정"
+            )
             if result.backup_path:
                 print(f"  백업: {result.backup_path}")
             total_double += result.double_wrap_fixed
@@ -262,6 +269,7 @@ def fix_from_report(report_paths: list[Path], auto_keys_dir: Path, dry_run: bool
 
 
 # ── 모드 2: auto_keys 전체 스캔 ──────────────────────────────────────────────
+
 
 def fix_by_scan(auto_keys_dir: Path, mods: list[str], dry_run: bool) -> None:
     if mods:
@@ -276,7 +284,9 @@ def fix_by_scan(auto_keys_dir: Path, mods: list[str], dry_run: bool) -> None:
         result = fix_csv_file(csv_path, dry_run)
         if result.total_fixed:
             mode = "[dry-run]" if dry_run else ""
-            print(f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건 보정")
+            print(
+                f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건 보정"
+            )
             if result.backup_path:
                 print(f"  백업: {result.backup_path}")
             total_double += result.double_wrap_fixed
@@ -297,6 +307,7 @@ def _print_summary(double: int, imbalance: int, missing: int, dry_run: bool) -> 
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
