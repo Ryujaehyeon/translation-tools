@@ -3,7 +3,7 @@
 The checker is read-only. It is designed to reduce review noise by splitting
 token problems into actionable groups:
 
-- critical: `$...$`, `£...£`, or `[...]` token count differs.
+- critical: `$...$`, `£...£`, `[...]`, or malformed Korean `£word` token count differs.
 - hard_order: the same hard tokens exist, but their order differs.
 - style: only `§...` or explicit `\\n` shape differs.
 
@@ -22,23 +22,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
+from token_parser import extract_token_values
 from tool_config import translation_keys_root
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUTO_KEYS = translation_keys_root()
 DEFAULT_REPORT_DIR = ROOT / "maintenance" / "reports" / "token_validation"
 
-
-TOKEN_PATTERNS = {
-    "dollar_ref": re.compile(r"\$[^$\s]+\$"),
-    "icon": re.compile(r"\u00a3[^\u00a3\s]+\u00a3"),
-    "bracket_expr": re.compile(r"\[[^\]\n]+\]"),
-    "color_code": re.compile(r"\u00a7[A-Za-z0-9!#]"),
-    "escaped_newline": re.compile(r"\\n"),
-    # over-escape: 백슬래시 2개 이상 + n (\\n 등). 게임에서 줄바꿈이 깨져 \n 글자로
-    # 노출되는 손상. english_value엔 보통 없으므로 korean_value에만 나타나면 critical.
-    "over_escaped_newline": re.compile(r"\\{2,}n"),
-}
 
 # \u00a7(U+00A7) \ub300\uc2e0 \uc4f0\uc774\ub294 \uc720\uc0ac \uc720\ub2c8\ucf54\ub4dc \ubb38\uc790 \u2014 AI \ubc88\uc5ed \uacb0\uacfc \uc624\uc5fc \uac10\uc9c0\uc6a9
 SECTION_SIGN_LOOKALIKE_RE = re.compile(r"[\u223d\u2248\uff5e\u223c][A-Za-z!_]")
@@ -153,7 +143,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def extract_tokens(value: str) -> dict[str, list[str]]:
-    return {name: pattern.findall(value or "") for name, pattern in TOKEN_PATTERNS.items()}
+    """Extract token shapes with the range-aware parser."""
+    return extract_token_values(value)
 
 
 def compact(tokens: dict[str, list[str]]) -> dict[str, list[str]]:
@@ -173,7 +164,15 @@ def has_values(delta: dict[str, list[str]]) -> bool:
     return any(delta.values())
 
 
-def issue_action(severity: str) -> str:
+def issue_action(severity: str, issue_types: Iterable[str] | None = None) -> str:
+    issue_types = set(issue_types or [])
+    if "unclosed_icon" in issue_types:
+        return "Close malformed icon tokens in korean_value, e.g. £energy -> £energy£."
+    if "source_unclosed_icon" in issue_types:
+        return (
+            "Source english_value contains malformed icon tokens; patch source tokens "
+            "instead of retranslating."
+        )
     if severity == "critical":
         return "Copy missing hard tokens from english_value into korean_value, or remove extra hard tokens."
     if severity == "hard_order":
@@ -221,6 +220,16 @@ def classify_issue(
             issue_types.append(token_type)
             style_missing[token_type] = missing
             style_extra[token_type] = extra
+
+    english_unclosed_icons = english_tokens.get("unclosed_icon", [])
+    korean_unclosed_icons = korean_tokens.get("unclosed_icon", [])
+    if english_unclosed_icons:
+        issue_types.append("source_unclosed_icon")
+        if not korean_unclosed_icons:
+            style_missing["source_unclosed_icon"] = english_unclosed_icons
+    if korean_unclosed_icons:
+        issue_types.append("unclosed_icon")
+        hard_extra["unclosed_icon"] = korean_unclosed_icons
 
     if has_values(hard_missing) or has_values(hard_extra):
         return (
@@ -534,7 +543,7 @@ def issue_to_row(issue: TokenIssue) -> dict[str, object]:
         "korean_tokens": json.dumps(issue.korean_tokens, ensure_ascii=False),
         "english_value": issue.english_value,
         "korean_value": issue.korean_value,
-        "suggested_action": issue_action(issue.severity),
+        "suggested_action": issue_action(issue.severity, issue.issue_types),
     }
 
 

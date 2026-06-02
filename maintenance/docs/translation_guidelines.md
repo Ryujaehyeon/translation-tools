@@ -100,7 +100,7 @@ $ap_aggressive_hivemind_desc$\n\n$ap_aggressive_hivemind_tooltip$
 
 ### 공식 고정 용어
 
-반드시 아래 표현으로 통일한다. 전체 목록: `maintenance/term_glossary.csv`
+반드시 아래 표현으로 통일한다. 전체 목록: `../term_glossary.csv`
 
 | 영어 | 한국어 |
 |---|---|

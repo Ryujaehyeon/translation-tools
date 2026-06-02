@@ -1,9 +1,19 @@
 # 통합한글모드 도구 설명
 
-최종 갱신: 2026-05-25
+최종 갱신: 2026-06-03
 
 `tools/` 아래 각 스크립트의 역할, 주요 옵션, 출력 파일을 정리한다.
 작업 순서와 명령어 조합은 `workflow.md`를 참조한다.
+
+역할: **도구 레퍼런스**. 각 스크립트가 무엇을 입력받고 무엇을 출력하는지, 그리고 주요
+옵션이 무엇인지 설명한다. 절차형 레시피는 `workflow.md`, 사용자용 빠른 시작은
+`manual.md`, 최신 세션 상태는 `../../../HANDOFF.md`에 둔다.
+
+넣지 말 것:
+
+- 번역 문체·용어 규칙 (`translation_guidelines.md`)
+- 세션별 작업 로그 (`../../../HANDOFF.md`)
+- 프로젝트 구조 설명 (`COLLABORATION.md`)
 
 ---
 
@@ -232,8 +242,18 @@ maintenance/reports/review/review_latest.csv  (기존 파일은 날짜 파일로
 ## validate_auto_key_tokens.py
 
 `translation_keys` CSV의 토큰·줄바꿈·따옴표 구조를 검수한다.
+토큰 추출은 `token_parser.py`의 범위 인식 파서를 사용한다. 이미 파싱된 `$...$`,
+`£...£`, `[...]` 내부는 다시 검사하지 않아 `£menu_1£EHOF`처럼 토큰 뒤에 텍스트가
+붙는 정상 케이스와 `['concept_x', '$energy$']`처럼 토큰 내부에 토큰처럼 보이는
+문자가 있는 케이스를 구분한다.
 
-검수 항목: `$...$`, `£...£`, `[...]`, `§X...§!`, `\n`, CSV 따옴표 구조
+검수 항목: `$...$`, `£...£`, 닫힘 없는 아이콘(`£word `), `[...]`, `§X...§!`,
+`\n`, CSV 따옴표 구조
+
+닫힘 없는 아이콘은 비교 시 의도된 아이콘으로 정규화한다. 따라서 영어 원문이
+`£energy `처럼 깨져 있고 한국어가 `£energy£`로 복원한 행은 critical 오탐으로 보지
+않는다. 반대로 `korean_value`에 `£energy `가 남아 있으면 `unclosed_icon` critical로
+보고한다.
 
 주요 옵션:
 
@@ -266,8 +286,33 @@ CSV 따옴표 누락·불균형·과도한 중첩을 자동 보정한다.
 | `--scan` | 전수 스캔 후 보정 |
 | `--mod` | 특정 모드만 처리 |
 | `--dry-run` | 변경 예정 수만 출력, 파일 수정 없음 |
+| `--only-unclosed-icons` | `korean_value`의 닫힘 없는 아이콘만 보정하고 따옴표·줄바꿈 보정은 건너뜀 |
 
 변경 전 백업: `maintenance/backups/fix_quote_issues/`
+
+---
+
+## test_token_parser.py
+
+사용자 편집 가능한 검출 케이스 파일을 읽어 범위 인식 토큰 파서와 validate 분류가
+깨진 토큰 케이스를 기대대로 잡는지 dry-run으로 확인한다.
+
+케이스 파일:
+
+```text
+maintenance/fixtures/token_detection_cases.jsonl
+```
+
+각 줄은 독립 JSON 객체다. `text` + `expected_tokens`/`expected_fixed`로 파서·보정
+결과를 확인하거나, `english_value` + `korean_value` + `expected_severity` +
+`expected_issue_types`로 validate 분류를 확인한다. `#`로 시작하는 줄은 주석으로
+무시된다.
+
+```powershell
+python tools/test_token_parser.py
+python tools/test_token_parser.py --show-passed
+python tools/test_token_parser.py --id korean_unclosed_is_critical
+```
 
 ---
 

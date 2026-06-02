@@ -32,6 +32,7 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from token_parser import extract_token_values
 from tool_config import translation_keys_root
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -41,7 +42,7 @@ REPORT_DIR = PACK_ROOT / "maintenance" / "reports" / "ai_translation"
 BACKUP_ROOT = PACK_ROOT / "maintenance" / "backups" / "translate_keys"
 LOCK_FILE_PATH = PACK_ROOT / "maintenance" / "ai_current_task.txt"
 DEFAULT_API_KEY_FILE = SCRIPT_DIR / "api_key.txt"
-DEFAULT_GUIDELINES_FILE = PACK_ROOT / "maintenance" / "translation_guidelines.md"
+DEFAULT_GUIDELINES_FILE = PACK_ROOT / "maintenance" / "docs" / "translation_guidelines.md"
 DEFAULT_GLOSSARY_FILE = PACK_ROOT / "maintenance" / "term_glossary.csv"
 
 # 기본 모델: gpt-4o-mini (저렴한 편이며 번역 품질 검증된 모델)
@@ -320,7 +321,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--use-guidelines",
         action="store_true",
-        help="Load maintenance/translation_guidelines.md into the OpenAI prompt. 기본: 토큰 포함 행에만 자동 적용.",
+        help="Load maintenance/docs/translation_guidelines.md into the OpenAI prompt. 기본: 토큰 포함 행에만 자동 적용.",
     )
     parser.add_argument(
         "--no-glossary",
@@ -718,7 +719,8 @@ def restore_protected_tokens(value: str, replacements: dict[str, str]) -> str:
 
 def extract_tokens(value: str) -> dict[str, list[str]]:
     """토큰 유형별 목록 반환. 반환 예: {"dollar_ref": ["$energy$"], ...}"""
-    return {name: pattern.findall(value or "") for name, pattern in TOKEN_PATTERNS.items()}
+    parsed = extract_token_values(value)
+    return {name: parsed.get(name, []) for name in TOKEN_PATTERNS}
 
 
 def token_delta(source: str, target: str) -> dict[str, dict[str, list[str]]]:

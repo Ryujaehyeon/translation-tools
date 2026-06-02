@@ -1,14 +1,18 @@
 # 자동키 번역 작업내역
 
-최종 갱신: 2026-05-25
+최종 갱신: 2026-06-03
 
-이 문서는 번역 작업의 주요 결정·변경 사항을 기록한다. 상세 진행률은 `maintenance/translation_progress_tree.md`를 기준으로 본다.
+이 문서는 번역 작업의 주요 결정·변경 사항을 기록한다. 상세 진행률은 `../translation_progress_tree.md`를 기준으로 본다.
+
+역할: **역사적 작업 로그**. 최신 인계나 다음 작업 큐가 아니라, 과거 번역 작업의 큰
+결정만 남긴다. 최신 상태는 `../../../HANDOFF.md`, 프로젝트 구조는 `../docs/COLLABORATION.md`,
+진행률은 `../translation_progress_tree.md`를 기준으로 본다.
 
 ## 기준 문서
 
-- 번역 지침: `maintenance/translation_guidelines.md`
-- 전체 모드/파일별 번역률 트리: `maintenance/translation_progress_tree.md`
-- 빈 원문 키 목록: `maintenance/reports/translation_work/empty_english_keys.csv`
+- 번역 지침: `../docs/translation_guidelines.md`
+- 전체 모드/파일별 번역률 트리: `../translation_progress_tree.md`
+- 빈 원문 키 목록: `../reports/translation_work/empty_english_keys.csv`
 
 ## 작업 규칙 요약
 
@@ -21,7 +25,7 @@
 
 ## 현재 잔여 요약
 
-자세한 파일별 수치는 `maintenance/translation_progress_tree.md`를 기준으로 본다.
+자세한 파일별 수치는 `../translation_progress_tree.md`를 기준으로 본다.
 
 - `more_events_mod__727000451`: 진행 중 (~9,000행 잔여, 가장 큰 모드)
 - `plentiful_traditions_4_2_x__1311725711`: 진행 중 (~1,700행 잔여)

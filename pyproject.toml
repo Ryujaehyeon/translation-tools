@@ -1,4 +1,4 @@
-# ruff 설정 — 개발 전용. 도구 실행에는 영향 없다 (PYTHON_STYLE_GUIDE.md 13절 참고).
+# ruff 설정 — 개발 전용. 도구 실행에는 영향 없다 (maintenance/docs/PYTHON_STYLE_GUIDE.md 13절 참고).
 [tool.ruff]
 line-length = 100          # 가이드 6절의 "100자 이내" 기준
 target-version = "py312"
@@ -12,5 +12,5 @@ extend-exclude = [
 select = ["E", "W", "F", "I"]
 # E501(줄 길이)은 포매터(ruff format)가 관리한다. 포매터가 못 쪼개는 줄은 거의
 # 전부 긴 문자열(help 문장·정규식·메시지)이라 억지로 나누면 오히려 읽기 나쁘다.
-# (PYTHON_STYLE_GUIDE.md 6절: 가독성이 길이 규칙보다 우선)
+# (maintenance/docs/PYTHON_STYLE_GUIDE.md 6절: 가독성이 길이 규칙보다 우선)
 ignore = ["E501"]

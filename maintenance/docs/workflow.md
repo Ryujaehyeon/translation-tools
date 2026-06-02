@@ -1,9 +1,20 @@
 # 통합한글모드 번역 프로세스
 
-최종 갱신: 2026-05-27
+최종 갱신: 2026-06-03
 
 이 문서는 번역 작업 순서와 각 단계의 명령어를 정리한다.
 번역 규칙은 `translation_guidelines.md`, 도구 옵션 상세는 `tools_overview.md`를 참조한다.
+
+역할: **절차 문서**. "무슨 순서로 실행할지"와 대표 명령어만 둔다.
+도구별 전체 옵션은 `tools_overview.md`, 사용자용 빠른 시작은 `manual.md`, 최신 인계는
+`../../../HANDOFF.md`를 기준으로 본다.
+
+넣지 말 것:
+
+- 세션별 진단 로그
+- 도구 내부 구현 설명
+- 옵션 전체 목록
+- 오래된 진행률 숫자
 
 ## 기본 원칙
 
@@ -236,6 +247,6 @@ python tools/validate_translation_outputs.py <workshop_id> maintenance\translati
 
 확인 항목:
 
-- `translation_progress_tree.md`에서 error 행(진행률 감소 기준) 0건인지 확인
+- `../translation_progress_tree.md`에서 error 행(진행률 감소 기준) 0건인지 확인
 - `review_latest.csv`에서 warning 행은 번역 불필요 케이스인지 샘플 확인
 - critical 토큰 불일치 0건인지 확인

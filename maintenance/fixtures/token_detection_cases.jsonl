@@ -1,0 +1,13 @@
+# Token parser and validator detection cases.
+# Add one JSON object per line. Lines starting with # are ignored.
+# Use these cases to model broken token shapes that must be detected by dry-run tests.
+{"id":"unclosed_icon_basic","text":"£energy §YEnergy§!","expected_tokens":{"icon":["£energy£"],"unclosed_icon":["£energy"],"color_code":["§Y","§!"]},"expected_fixed":"£energy£ §YEnergy§!"}
+{"id":"unclosed_icon_numeric_prefix","text":"The cost is 1000£energy and 1000£minerals .","expected_tokens":{"icon":["£energy£","£minerals£"],"unclosed_icon":["£energy","£minerals"]},"expected_fixed":"The cost is 1000£energy£ and 1000£minerals£ ."}
+{"id":"closed_icon_attached_text_guard","text":"£menu_1£EHOF AI","expected_tokens":{"icon":["£menu_1£"],"unclosed_icon":[]},"expected_fixed":"£menu_1£EHOF AI"}
+{"id":"bracket_inner_tokens_are_protected","text":"['concept_x', '$energy$ £minerals£'] and £energy ","expected_tokens":{"bracket_expr":["['concept_x', '$energy$ £minerals£']"],"dollar_ref":[],"icon":["£energy£"],"unclosed_icon":["£energy"]},"expected_fixed":"['concept_x', '$energy$ £minerals£'] and £energy£ "}
+{"id":"dollar_with_space_is_token","text":"Adds §Y$Fleet Capacity$§! to the empire.","expected_tokens":{"dollar_ref":["$Fleet Capacity$"],"color_code":["§Y","§!"]}}
+{"id":"price_dollar_is_not_token","text":"DLC starts at §Y9.99$§!, expansions at §Y19.99$§!.","expected_tokens":{"dollar_ref":[],"color_code":["§Y","§!","§Y","§!"]}}
+{"id":"source_unclosed_korean_fixed_is_style","english_value":"Gain £energy  §YEnergy§! each month.","korean_value":"매월 £energy£ §Y에너지§!를 얻습니다.","expected_severity":"style","expected_issue_types":["source_unclosed_icon"]}
+{"id":"korean_unclosed_is_critical","english_value":"Gain £energy  §YEnergy§! each month.","korean_value":"매월 £energy §Y에너지§!를 얻습니다.","expected_severity":"critical","expected_issue_types":["source_unclosed_icon","unclosed_icon"]}
+{"id":"closed_icon_attached_text_not_issue","english_value":"£menu_1£EHOF AI","korean_value":"£menu_1£EHOF AI","expected_severity":null,"expected_issue_types":[]}
+{"id":"bracket_inner_tokens_not_compared","english_value":"['concept_x', '$energy$ £minerals£']","korean_value":"['concept_x', '$energy$ £minerals£']","expected_severity":null,"expected_issue_types":[]}

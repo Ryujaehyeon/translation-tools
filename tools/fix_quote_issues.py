@@ -7,6 +7,7 @@
   3. double_wrap: csv.reader 통과 후 inner에 따옴표가 또 남아있는 경우
                   (파일에 5중 따옴표 형태 — 이중 저장으로 발생)
                   → inner의 바깥 따옴표를 한 겹 더 벗겨냄
+  4. unclosed_icon: korean_value에 남은 £word 형태 아이콘 → £word£
 
 실행 방법:
   # 1. validate_auto_key_tokens.py 먼저 실행해 리포트 생성
@@ -20,6 +21,9 @@
 
   # dry-run: 실제 수정 없이 변경 대상만 출력
   python tools/fix_quote_issues.py --scan --dry-run
+
+  # 닫는 £ 없는 한국어 아이콘 토큰만 보정
+  python tools/fix_quote_issues.py --scan --only-unclosed-icons --dry-run
 
   # 특정 모드 폴더만
   python tools/fix_quote_issues.py --scan --mod unique_ascension_perks_4_3_dev_branch__2811428998
@@ -39,6 +43,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from token_parser import close_unclosed_icons
 from tool_config import translation_keys_root
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,8 +103,6 @@ def fix_missing_quotes(english_value: str, korean_value: str) -> tuple[str, bool
 
 
 _OVER_ESCAPED_NL_RE = re.compile(r"\\{2,}n")
-
-
 def fix_over_escaped_newline(english_value: str, korean_value: str) -> tuple[str, bool]:
     """korean_value의 over-escape된 줄바꿈(\\\\n 등)을 \\n으로 정규화.
 
@@ -113,6 +116,11 @@ def fix_over_escaped_newline(english_value: str, korean_value: str) -> tuple[str
         return korean_value, False
     fixed = _OVER_ESCAPED_NL_RE.sub(r"\\n", korean_value)
     return fixed, fixed != korean_value
+
+
+def fix_unclosed_icon_tokens(value: str) -> tuple[str, bool]:
+    """korean_value에 남은 닫힘 없는 아이콘 토큰을 닫힌 형태로 정규화."""
+    return close_unclosed_icons(value)
 
 
 # ── CSV 읽기/쓰기 ─────────────────────────────────────────────────────────────
@@ -167,6 +175,7 @@ class FileFixResult:
     double_wrap_fixed: int = 0
     missing_fixed: int = 0
     over_escape_fixed: int = 0
+    unclosed_icon_fixed: int = 0
     backup_path: str = ""
 
     @property
@@ -176,10 +185,11 @@ class FileFixResult:
             + self.double_wrap_fixed
             + self.missing_fixed
             + self.over_escape_fixed
+            + self.unclosed_icon_fixed
         )
 
 
-def fix_csv_file(path: Path, dry_run: bool) -> FileFixResult:
+def fix_csv_file(path: Path, dry_run: bool, only_unclosed_icons: bool = False) -> FileFixResult:
     result = FileFixResult(path=path)
     fieldnames, rows = read_csv_rows(path)
 
@@ -201,6 +211,17 @@ def fix_csv_file(path: Path, dry_run: bool) -> FileFixResult:
         key = row.get("key", "")
         english = row.get("english_value", "") or ""
         korean = row.get("korean_value", "") or ""
+
+        fixed_kor, icon_changed = fix_unclosed_icon_tokens(korean)
+        if icon_changed:
+            result.unclosed_icon_fixed += 1
+            changed = True
+            _show("닫힘없는아이콘", key, "korean_value", korean, fixed_kor)
+            row["korean_value"] = fixed_kor
+            korean = fixed_kor
+
+        if only_unclosed_icons:
+            continue
 
         # 1) 이중 감싸기 보정 (korean_value)
         fixed_kor, dw_changed = fix_double_wrap(korean)
@@ -263,7 +284,9 @@ def fix_csv_file(path: Path, dry_run: bool) -> FileFixResult:
 # ── 모드 1: report CSV를 읽어 대상 파일만 보정 ───────────────────────────────
 
 
-def fix_from_report(report_paths: list[Path], auto_keys_dir: Path, dry_run: bool) -> None:
+def fix_from_report(
+    report_paths: list[Path], auto_keys_dir: Path, dry_run: bool, only_unclosed_icons: bool
+) -> None:
     # 리포트에서 (mod, file) 조합을 수집
     affected: dict[Path, set[str]] = defaultdict(set)
     for rp in report_paths:
@@ -283,16 +306,21 @@ def fix_from_report(report_paths: list[Path], auto_keys_dir: Path, dry_run: bool
         print("[완료] 보정 대상 없음 (리포트에 행이 없음)")
         return
 
-    total_double = total_imbalance = total_missing = total_over_escape = 0
+    total_double = total_imbalance = total_missing = total_over_escape = total_icon = 0
     for csv_path in sorted(affected):
         if not csv_path.exists():
             print(f"[SKIP] CSV 없음: {csv_path}")
             continue
-        result = fix_csv_file(csv_path, dry_run)
+        result = fix_csv_file(csv_path, dry_run, only_unclosed_icons=only_unclosed_icons)
         if result.total_fixed:
             mode = "[dry-run]" if dry_run else ""
             print(
-                f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건, over-escape {result.over_escape_fixed}건 보정"
+                f"{mode} {csv_path.name}: "
+                f"이중감싸기 {result.double_wrap_fixed}건, "
+                f"불균형 {result.imbalance_fixed}건, "
+                f"누락 {result.missing_fixed}건, "
+                f"over-escape {result.over_escape_fixed}건, "
+                f"닫힘없는아이콘 {result.unclosed_icon_fixed}건 보정"
             )
             if result.backup_path:
                 print(f"  백업: {result.backup_path}")
@@ -300,14 +328,19 @@ def fix_from_report(report_paths: list[Path], auto_keys_dir: Path, dry_run: bool
             total_imbalance += result.imbalance_fixed
             total_missing += result.missing_fixed
             total_over_escape += result.over_escape_fixed
+            total_icon += result.unclosed_icon_fixed
 
-    _print_summary(total_double, total_imbalance, total_missing, total_over_escape, dry_run)
+    _print_summary(
+        total_double, total_imbalance, total_missing, total_over_escape, total_icon, dry_run
+    )
 
 
 # ── 모드 2: auto_keys 전체 스캔 ──────────────────────────────────────────────
 
 
-def fix_by_scan(auto_keys_dir: Path, mods: list[str], dry_run: bool) -> None:
+def fix_by_scan(
+    auto_keys_dir: Path, mods: list[str], dry_run: bool, only_unclosed_icons: bool
+) -> None:
     if mods:
         csv_files: list[Path] = []
         for mod in sorted(mods):
@@ -315,13 +348,18 @@ def fix_by_scan(auto_keys_dir: Path, mods: list[str], dry_run: bool) -> None:
     else:
         csv_files = sorted(auto_keys_dir.rglob("*_key.csv"))
 
-    total_double = total_imbalance = total_missing = total_over_escape = 0
+    total_double = total_imbalance = total_missing = total_over_escape = total_icon = 0
     for csv_path in csv_files:
-        result = fix_csv_file(csv_path, dry_run)
+        result = fix_csv_file(csv_path, dry_run, only_unclosed_icons=only_unclosed_icons)
         if result.total_fixed:
             mode = "[dry-run]" if dry_run else ""
             print(
-                f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건, over-escape {result.over_escape_fixed}건 보정"
+                f"{mode} {csv_path.name}: "
+                f"이중감싸기 {result.double_wrap_fixed}건, "
+                f"불균형 {result.imbalance_fixed}건, "
+                f"누락 {result.missing_fixed}건, "
+                f"over-escape {result.over_escape_fixed}건, "
+                f"닫힘없는아이콘 {result.unclosed_icon_fixed}건 보정"
             )
             if result.backup_path:
                 print(f"  백업: {result.backup_path}")
@@ -329,18 +367,24 @@ def fix_by_scan(auto_keys_dir: Path, mods: list[str], dry_run: bool) -> None:
             total_imbalance += result.imbalance_fixed
             total_missing += result.missing_fixed
             total_over_escape += result.over_escape_fixed
+            total_icon += result.unclosed_icon_fixed
 
-    _print_summary(total_double, total_imbalance, total_missing, total_over_escape, dry_run)
+    _print_summary(
+        total_double, total_imbalance, total_missing, total_over_escape, total_icon, dry_run
+    )
 
 
-def _print_summary(double: int, imbalance: int, missing: int, over_escape: int, dry_run: bool) -> None:
-    total = double + imbalance + missing + over_escape
+def _print_summary(
+    double: int, imbalance: int, missing: int, over_escape: int, icon: int, dry_run: bool
+) -> None:
+    total = double + imbalance + missing + over_escape + icon
     label = "(dry-run, 실제 저장 안 함)" if dry_run else ""
     print(f"\n=== 완료 {label} ===")
     print(f"  이중 감싸기 보정: {double}건")
     print(f"  불균형 보정: {imbalance}건")
     print(f"  누락 따옴표 보정: {missing}건")
     print(f"  over-escape 보정: {over_escape}건")
+    print(f"  닫힘 없는 아이콘 보정: {icon}건")
     print(f"  합계: {total}건")
 
 
@@ -381,6 +425,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="실제 파일을 수정하지 않고 변경 대상만 출력합니다.",
     )
+    parser.add_argument(
+        "--only-unclosed-icons",
+        action="store_true",
+        help="korean_value의 닫힘 없는 아이콘 토큰만 보정하고 따옴표/줄바꿈 보정은 건너뜁니다.",
+    )
     return parser.parse_args()
 
 
@@ -393,7 +442,12 @@ def main() -> int:
         return 1
 
     if args.scan:
-        fix_by_scan(auto_keys_dir, args.mod, args.dry_run)
+        fix_by_scan(
+            auto_keys_dir,
+            args.mod,
+            args.dry_run,
+            only_unclosed_icons=args.only_unclosed_icons,
+        )
     else:
         # glob 패턴 확장
         report_paths: list[Path] = []
@@ -403,7 +457,12 @@ def main() -> int:
                 report_paths.extend(Path(m) for m in matches)
             else:
                 report_paths.append(Path(pattern))
-        fix_from_report(report_paths, auto_keys_dir, args.dry_run)
+        fix_from_report(
+            report_paths,
+            auto_keys_dir,
+            args.dry_run,
+            only_unclosed_icons=args.only_unclosed_icons,
+        )
 
     return 0
 

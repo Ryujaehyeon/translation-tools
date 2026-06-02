@@ -12,8 +12,8 @@ Stellaris 모드 한국어 번역 애드온 제작용 유지보수 도구 모음
 .\run.ps1 validate <workshop_id>  # 검증
 ```
 
-자세한 사용법 → [매뉴얼](maintenance/manual.md)
-협업 가이드 → [COLLABORATION.md](maintenance/COLLABORATION.md)
+자세한 사용법 → [매뉴얼](maintenance/docs/manual.md)
+협업 가이드 → [COLLABORATION.md](maintenance/docs/COLLABORATION.md)
 
 ## 주의
 

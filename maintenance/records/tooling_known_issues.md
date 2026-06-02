@@ -1,15 +1,19 @@
 ﻿# 도구 개선 필요사항
 
-최종 갱신: 2026-05-25 (3차)
+최종 갱신: 2026-06-03
 
 이 문서는 `tools/*.py`와 번역 프로세스 문서를 읽으며 바로 확인된 개선 필요사항을 정리한 참고 문서이다. 작업 큐가 아니라 다음 코드 정리 때 확인할 목록이며, 실제 수정은 별도 단계에서 진행한다.
 
+역할: **도구 개선 큐와 방치 결정 목록**. 이미 끝난 세션 로그는 남기지 않는다.
+최신 인계는 `../../../HANDOFF.md`, 도구 사용법은 `../docs/tools_overview.md`, 실제 실패 사례는
+`translation_failure_cases.md`를 기준으로 본다.
+
 관련 기준 문서:
 
-- `maintenance/COLLABORATION.md`
-- `maintenance/workflow.md`
-- `maintenance/translation_guidelines.md`
-- `maintenance/tools_overview.md`
+- `../docs/COLLABORATION.md`
+- `../docs/workflow.md`
+- `../docs/translation_guidelines.md`
+- `../docs/tools_overview.md`
 
 ## 1. `translate_keys.py` 샘플 모드 반환값 불일치
 
@@ -74,5 +78,5 @@
 - 우선순위: 낮음
 - 영향: 문서에는 `maintenance/reports/translation_work/token_reference_latest.csv` 갱신 흐름이 남아 있지만, 현재 실제 도구는 `maintenance/reports/token_validation/` 아래에 `token_shape_issues_*`, `token_repair_worklist_*`, `token_style_review_*`, `quote_issues_*`를 생성한다.
 - 원인: 토큰 검수 흐름이 개선되면서 실제 산출물이 바뀌었지만 일부 문서 표현이 예전 계획을 유지하고 있다.
-- 수정 방향: `workflow.md`와 `translation_guidelines.md`의 토큰 보완 설명을 현재 산출물 기준으로 갱신한다. `token_reference_latest.csv`를 계속 쓸 계획이 없다면 예전 경로 문구는 제거한다.
+- 수정 방향: `../docs/workflow.md`와 `../docs/translation_guidelines.md`의 토큰 보완 설명을 현재 산출물 기준으로 갱신한다. `token_reference_latest.csv`를 계속 쓸 계획이 없다면 예전 경로 문구는 제거한다.
 - 확인 방법: `rg -n "token_reference_latest|token_repair_worklist|token_shape_issues" maintenance/*.md`
