@@ -24,4 +24,4 @@ Thumbs.db
 Desktop.ini
 
 # Translation key CSVs (working data, not tracked)
-maintenance/translation_keys/**/*.csv
+maintenance/translation_keys/
