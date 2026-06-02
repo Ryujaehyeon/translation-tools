@@ -71,8 +71,9 @@ DEFAULT_MAX_RETRIES = 4
 TOKEN_PATTERNS = {
     # 공백 포함 달러 토큰 허용 ($Fleet Capacity$ 등): \n\t만 불허
     "dollar_ref": re.compile(r"\$[^$\n\t]+\$"),
-    # 정상: £word£ / 오타: £word  (닫는 £ 없이 공백+§ 앞에서 끊김) 둘 다 매칭
-    "icon": re.compile(r"£[^£\s]+(?:£|(?=\s+§))"),
+    # 정상: £word£ / 오타: £word  (닫는 £ 없이 공백 앞에서 끊김) 둘 다 매칭.
+    # 공백 뒤가 §(색상)이든 $(변수)이든 일반 텍스트든 모두 토큰 경계로 본다.
+    "icon": re.compile(r"£[^£\s]+(?:£|(?=\s))"),
     "bracket_expr": re.compile(r"\[[^\]\n]+\]"),
     "color_code": re.compile(r"§[A-Za-z0-9!#]"),
     "escaped_newline": re.compile(r"\\n"),

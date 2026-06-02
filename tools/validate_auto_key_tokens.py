@@ -35,12 +35,15 @@ TOKEN_PATTERNS = {
     "bracket_expr": re.compile(r"\[[^\]\n]+\]"),
     "color_code": re.compile(r"\u00a7[A-Za-z0-9!#]"),
     "escaped_newline": re.compile(r"\\n"),
+    # over-escape: 백슬래시 2개 이상 + n (\\n 등). 게임에서 줄바꿈이 깨져 \n 글자로
+    # 노출되는 손상. english_value엔 보통 없으므로 korean_value에만 나타나면 critical.
+    "over_escaped_newline": re.compile(r"\\{2,}n"),
 }
 
 # \u00a7(U+00A7) \ub300\uc2e0 \uc4f0\uc774\ub294 \uc720\uc0ac \uc720\ub2c8\ucf54\ub4dc \ubb38\uc790 \u2014 AI \ubc88\uc5ed \uacb0\uacfc \uc624\uc5fc \uac10\uc9c0\uc6a9
 SECTION_SIGN_LOOKALIKE_RE = re.compile(r"[\u223d\u2248\uff5e\u223c][A-Za-z!_]")
 
-HARD_TOKEN_TYPES = ("dollar_ref", "icon", "bracket_expr")
+HARD_TOKEN_TYPES = ("dollar_ref", "icon", "bracket_expr", "over_escaped_newline")
 STYLE_TOKEN_TYPES = ("color_code", "escaped_newline")
 
 SEVERITY_PRIORITY = {

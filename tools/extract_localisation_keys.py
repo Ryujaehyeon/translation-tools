@@ -82,12 +82,35 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig")
 
 
+def strip_trailing_comment(value: str) -> str:
+    """Drop a `# ...` comment that follows the closing quote of a value.
+
+    Stellaris allows trailing comments after `key: "..."`. The closing quote
+    marks the end of the real value; anything after it (e.g. `# TODO ...`) must
+    not become part of english_value or it would be translated and shown in
+    game. Embedded `\\"` escapes inside the string are preserved. Values that do
+    not start with a quote are returned unchanged (raw syntax kept as-is).
+    """
+    if not value.startswith('"'):
+        return value
+    i = 1
+    while i < len(value):
+        if value[i] == "\\":
+            i += 2
+            continue
+        if value[i] == '"':
+            return value[: i + 1]
+        i += 1
+    return value
+
+
 def iter_localisation_entries(path: Path) -> list[tuple[str, str]]:
     """Return (key, english_value) pairs in source order, deduplicated by key.
 
     Stellaris localisation accepts both `key:0 "value"` and `key: "value"`.
-    The regex keeps the text after the colon as english_value without trying to
-    parse the quoted string contents; preserving raw syntax is safer here.
+    The regex keeps the text after the colon as english_value; a trailing
+    `# ...` comment after the closing quote is stripped (see
+    strip_trailing_comment) so it does not leak into translations.
     """
     entries: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -98,7 +121,7 @@ def iter_localisation_entries(path: Path) -> list[tuple[str, str]]:
         if not match:
             continue
         key = match.group(1).strip()
-        english_value = match.group(3).strip() if match.group(3) else ""
+        english_value = strip_trailing_comment(match.group(3).strip()) if match.group(3) else ""
         if key and key not in seen:
             entries.append((key, english_value))
             seen.add(key)

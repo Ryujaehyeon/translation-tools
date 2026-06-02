@@ -38,12 +38,12 @@ def get_auto_keys():
 
 # ── TOKEN_RE (translate_keys.py와 동일) ───────────────────────────────────────
 TOKEN_RE = re.compile(
-    r"\$[^$\n\t]+\$|£[^£\s]+(?:£|(?=\s+§))|\[[^\]\n]+\]|§[A-Za-z0-9!#]|\\n|\\t|\\\"|\\\\"
+    r"\$[^$\n\t]+\$|£[^£\s]+(?:£|(?=\s))|\[[^\]\n]+\]|§[A-Za-z0-9!#]|\\n|\\t|\\\"|\\\\"
 )
 
 TOKEN_PATTERNS = {
     "dollar_ref": re.compile(r"\$[^$\n\t]+\$"),
-    "icon": re.compile(r"£[^£\s]+(?:£|(?=\s+§))"),
+    "icon": re.compile(r"£[^£\s]+(?:£|(?=\s))"),
     "bracket_expr": re.compile(r"\[[^\]\n]+\]"),
     "color_code": re.compile(r"§[A-Za-z0-9!#]"),
     "escaped_newline": re.compile(r"\\n"),
