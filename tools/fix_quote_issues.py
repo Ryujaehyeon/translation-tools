@@ -31,6 +31,7 @@ import argparse
 import csv
 import glob as glob_module
 import io
+import re
 import shutil
 import sys
 from collections import defaultdict
@@ -96,6 +97,24 @@ def fix_missing_quotes(english_value: str, korean_value: str) -> tuple[str, bool
     return f'"{k}"', True
 
 
+_OVER_ESCAPED_NL_RE = re.compile(r"\\{2,}n")
+
+
+def fix_over_escaped_newline(english_value: str, korean_value: str) -> tuple[str, bool]:
+    """korean_value의 over-escape된 줄바꿈(\\\\n 등)을 \\n으로 정규화.
+
+    게임에서 줄바꿈 대신 \\n 글자가 노출되던 손상을 복구한다. english_value에
+    동일한 over-escape가 있으면 원작자 의도로 보고 건드리지 않는다.
+    반환: (보정된 korean_value, 변경 여부)
+    """
+    if not _OVER_ESCAPED_NL_RE.search(korean_value):
+        return korean_value, False
+    if _OVER_ESCAPED_NL_RE.search(english_value or ""):
+        return korean_value, False
+    fixed = _OVER_ESCAPED_NL_RE.sub(r"\\n", korean_value)
+    return fixed, fixed != korean_value
+
+
 # ── CSV 읽기/쓰기 ─────────────────────────────────────────────────────────────
 
 
@@ -147,11 +166,17 @@ class FileFixResult:
     imbalance_fixed: int = 0
     double_wrap_fixed: int = 0
     missing_fixed: int = 0
+    over_escape_fixed: int = 0
     backup_path: str = ""
 
     @property
     def total_fixed(self) -> int:
-        return self.imbalance_fixed + self.double_wrap_fixed + self.missing_fixed
+        return (
+            self.imbalance_fixed
+            + self.double_wrap_fixed
+            + self.missing_fixed
+            + self.over_escape_fixed
+        )
 
 
 def fix_csv_file(path: Path, dry_run: bool) -> FileFixResult:
@@ -202,6 +227,16 @@ def fix_csv_file(path: Path, dry_run: bool) -> FileFixResult:
             changed = True
             _show("누락따옴표", key, "korean_value", korean, fixed_kor)
             row["korean_value"] = fixed_kor
+            korean = fixed_kor
+
+        # 3.5) over-escape 줄바꿈 보정 (korean_value)
+        fixed_kor, oe_changed = fix_over_escaped_newline(english, korean)
+        if oe_changed:
+            result.over_escape_fixed += 1
+            changed = True
+            _show("over-escape", key, "korean_value", korean, fixed_kor)
+            row["korean_value"] = fixed_kor
+            korean = fixed_kor
 
         # 4) 이중 감싸기 + 불균형 보정 (english_value) — 드물지만 체크
         fixed_eng, dw_eng = fix_double_wrap(english)
@@ -248,7 +283,7 @@ def fix_from_report(report_paths: list[Path], auto_keys_dir: Path, dry_run: bool
         print("[완료] 보정 대상 없음 (리포트에 행이 없음)")
         return
 
-    total_double = total_imbalance = total_missing = 0
+    total_double = total_imbalance = total_missing = total_over_escape = 0
     for csv_path in sorted(affected):
         if not csv_path.exists():
             print(f"[SKIP] CSV 없음: {csv_path}")
@@ -257,15 +292,16 @@ def fix_from_report(report_paths: list[Path], auto_keys_dir: Path, dry_run: bool
         if result.total_fixed:
             mode = "[dry-run]" if dry_run else ""
             print(
-                f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건 보정"
+                f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건, over-escape {result.over_escape_fixed}건 보정"
             )
             if result.backup_path:
                 print(f"  백업: {result.backup_path}")
             total_double += result.double_wrap_fixed
             total_imbalance += result.imbalance_fixed
             total_missing += result.missing_fixed
+            total_over_escape += result.over_escape_fixed
 
-    _print_summary(total_double, total_imbalance, total_missing, dry_run)
+    _print_summary(total_double, total_imbalance, total_missing, total_over_escape, dry_run)
 
 
 # ── 모드 2: auto_keys 전체 스캔 ──────────────────────────────────────────────
@@ -279,30 +315,32 @@ def fix_by_scan(auto_keys_dir: Path, mods: list[str], dry_run: bool) -> None:
     else:
         csv_files = sorted(auto_keys_dir.rglob("*_key.csv"))
 
-    total_double = total_imbalance = total_missing = 0
+    total_double = total_imbalance = total_missing = total_over_escape = 0
     for csv_path in csv_files:
         result = fix_csv_file(csv_path, dry_run)
         if result.total_fixed:
             mode = "[dry-run]" if dry_run else ""
             print(
-                f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건 보정"
+                f"{mode} {csv_path.name}: 이중감싸기 {result.double_wrap_fixed}건, 불균형 {result.imbalance_fixed}건, 누락 {result.missing_fixed}건, over-escape {result.over_escape_fixed}건 보정"
             )
             if result.backup_path:
                 print(f"  백업: {result.backup_path}")
             total_double += result.double_wrap_fixed
             total_imbalance += result.imbalance_fixed
             total_missing += result.missing_fixed
+            total_over_escape += result.over_escape_fixed
 
-    _print_summary(total_double, total_imbalance, total_missing, dry_run)
+    _print_summary(total_double, total_imbalance, total_missing, total_over_escape, dry_run)
 
 
-def _print_summary(double: int, imbalance: int, missing: int, dry_run: bool) -> None:
-    total = double + imbalance + missing
+def _print_summary(double: int, imbalance: int, missing: int, over_escape: int, dry_run: bool) -> None:
+    total = double + imbalance + missing + over_escape
     label = "(dry-run, 실제 저장 안 함)" if dry_run else ""
     print(f"\n=== 완료 {label} ===")
     print(f"  이중 감싸기 보정: {double}건")
     print(f"  불균형 보정: {imbalance}건")
     print(f"  누락 따옴표 보정: {missing}건")
+    print(f"  over-escape 보정: {over_escape}건")
     print(f"  합계: {total}건")
 
 
