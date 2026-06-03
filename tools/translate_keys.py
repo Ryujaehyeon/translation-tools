@@ -2280,6 +2280,9 @@ def main() -> int:
         print(f"sample_rows_written={len(sample_rows)}")
         print(f"sample_output={sample_output_path}")
     print(f"report={report_path}")
+    if total_changed and not sample_mode:
+        print("\n번역 결과의 토큰 무결성을 validate로 확인하세요:")
+        print("  python tools/validate_auto_key_tokens.py")
     # 정상 종료: 0, Ctrl+C 중단: 130 (Unix 관례)
     return 130 if interrupted else 0
 

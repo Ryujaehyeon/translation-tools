@@ -610,6 +610,9 @@ def main() -> int:
     except ValueError:
         rel_csv = report_csv
     print(f"  변경 내역 CSV  →  {rel_csv}")
+    if not args.dry_run and changed_total:
+        print("\n  가져온 참조 번역의 토큰을 validate로 확인하세요 (참조 모드 품질 이슈 주의):")
+        print("    python tools/validate_auto_key_tokens.py")
     print()
     return 0
 
