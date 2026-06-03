@@ -28,6 +28,7 @@ from tool_config import (
 )
 from tool_config import (
     csv_dict_writer,
+    read_text,
     resolve_pack_path,
 )
 from tool_config import (
@@ -68,10 +69,6 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
-def read_text(path: Path) -> str:
-    """Read localisation/CSV-adjacent text with UTF-8 BOM support."""
-    return path.read_text(encoding="utf-8-sig")
 
 
 def discover_english_sources(mod_root: Path) -> list[tuple[Path, Path, Path]]:

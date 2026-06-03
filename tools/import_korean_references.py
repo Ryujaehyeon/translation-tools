@@ -24,7 +24,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import csv_dict_writer, csv_writer, translation_keys_root
+from tool_config import (
+    csv_dict_writer,
+    csv_writer,
+    descriptor_name,
+    read_text,
+    resolve_pack_path,
+    translation_keys_root,
+)
 
 PACK_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUTO_KEYS_DIR = translation_keys_root()
@@ -145,24 +152,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def resolve_pack_path(raw: str) -> Path:
-    path = Path(raw)
-    if path.is_absolute():
-        return path
-    return PACK_ROOT / path
 
 
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8-sig", errors="replace")
 
-
-def descriptor_name(mod_root: Path) -> str:
-    descriptor = mod_root / "descriptor.mod"
-    if descriptor.is_file():
-        match = re.search(r'^\s*name\s*=\s*"([^"]+)"', read_text(descriptor), flags=re.MULTILINE)
-        if match:
-            return match.group(1)
-    return mod_root.name
 
 
 def resolve_reference_path(raw: str, workshop_root: Path) -> Path:

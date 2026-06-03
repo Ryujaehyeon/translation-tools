@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from token_parser import extract_token_values, parse_tokens
-from tool_config import csv_dict_writer, csv_writer, translation_keys_root
+from tool_config import csv_dict_writer, csv_writer, resolve_pack_path, translation_keys_root
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PACK_ROOT = SCRIPT_DIR.parent
@@ -441,10 +441,6 @@ def row_in_range(line_number: int, start_row: int, end_row: int | None) -> bool:
     return True
 
 
-def resolve_pack_path(raw: str) -> Path:
-    # 상대 경로면 PACK_ROOT 기준으로, 절대 경로면 그대로 반환
-    path = Path(raw)
-    return path if path.is_absolute() else PACK_ROOT / path
 
 
 def has_source(value: str) -> bool:

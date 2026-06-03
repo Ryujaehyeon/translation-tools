@@ -24,7 +24,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import csv_dict_writer
+from tool_config import csv_dict_writer, read_text, resolve_pack_path
 
 DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
 TOOL_ROOT = Path(__file__).resolve().parents[1]
@@ -72,10 +72,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def read_text(path: Path) -> str:
-    """Read localisation text with UTF-8 BOM support."""
-    return path.read_text(encoding="utf-8-sig")
-
 
 def write_text(path: Path, text: str) -> None:
     """Write patched localisation text with BOM and LF newlines."""
@@ -83,12 +79,6 @@ def write_text(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8-sig", newline="\n")
 
 
-def resolve_pack_path(raw: str) -> Path:
-    """Resolve relative paths from the translation pack root."""
-    path = Path(raw)
-    if path.is_absolute():
-        return path
-    return TOOL_ROOT / path
 
 
 def english_source_root(mod_root: Path) -> Path:

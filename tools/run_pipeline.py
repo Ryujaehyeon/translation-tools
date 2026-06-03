@@ -31,9 +31,11 @@ from datetime import datetime
 from pathlib import Path
 
 from tool_config import (
+    descriptor_name,
     ensure_standalone_mod,
     is_integrated_mode,
     output_root,
+    read_text,
     resolve_pack_path,
     translation_keys_root_arg,
 )
@@ -214,10 +216,6 @@ def apply_mode_preset(args: argparse.Namespace) -> None:
     # validation, and conflict worklist preparation.
 
 
-def read_text(path: Path) -> str:
-    """Read text files used by Steam/Paradox, tolerating BOMs and odd bytes."""
-    return path.read_text(encoding="utf-8-sig", errors="replace")
-
 
 def parse_vdf_paths(path: Path) -> list[Path]:
     """Extract Steam library paths from a simple Valve VDF file.
@@ -278,13 +276,6 @@ def detect_workshop_root() -> Path:
     )
 
 
-def descriptor_name(mod_root: Path) -> str:
-    """Read the user-facing mod name from descriptor.mod when available."""
-    descriptor = mod_root / "descriptor.mod"
-    if not descriptor.is_file():
-        return mod_root.name
-    match = re.search(r'^\s*name\s*=\s*"([^"]+)"', read_text(descriptor), flags=re.MULTILINE)
-    return match.group(1) if match else mod_root.name
 
 
 def slugify(value: str) -> str:

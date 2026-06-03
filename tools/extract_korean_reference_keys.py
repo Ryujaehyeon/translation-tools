@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import csv_writer
+from tool_config import csv_writer, descriptor_name, read_text, resolve_pack_path
 
 DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
 PACK_ROOT = Path(__file__).resolve().parents[1]
@@ -64,24 +64,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8-sig", errors="replace")
 
 
-def resolve_pack_path(raw: str) -> Path:
-    path = Path(raw)
-    if path.is_absolute():
-        return path
-    return PACK_ROOT / path
 
-
-def descriptor_name(mod_root: Path) -> str:
-    descriptor = mod_root / "descriptor.mod"
-    if descriptor.is_file():
-        match = re.search(r'^\s*name\s*=\s*"([^"]+)"', read_text(descriptor), flags=re.MULTILINE)
-        if match:
-            return match.group(1)
-    return mod_root.name
 
 
 def slugify(value: str) -> str:

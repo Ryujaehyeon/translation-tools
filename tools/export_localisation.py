@@ -29,6 +29,7 @@ from tool_config import (
     PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
 )
 from tool_config import (
+    read_text,
     resolve_pack_path,
 )
 from tool_config import (
@@ -74,10 +75,6 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
-def read_text(path: Path) -> str:
-    """Read localisation text using utf-8-sig for BOM compatibility."""
-    return path.read_text(encoding="utf-8-sig")
 
 
 def write_text(path: Path, text: str) -> None:

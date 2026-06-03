@@ -5,6 +5,7 @@ from __future__ import annotations
 import configparser
 import csv
 import os
+import re
 from pathlib import Path
 from typing import IO, Iterable
 
@@ -53,6 +54,20 @@ def _read_config() -> configparser.ConfigParser:
 def pack_path(raw: str | Path) -> Path:
     path = Path(raw)
     return path if path.is_absolute() else PACK_ROOT / path
+
+
+def read_text(path: Path) -> str:
+    """Steam/Paradox가 쓰는 텍스트를 BOM·이상 바이트를 견디며 읽는다."""
+    return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
+def descriptor_name(mod_root: Path) -> str:
+    """descriptor.mod의 `name="..."` 값을 반환한다. 없으면 폴더 이름."""
+    descriptor = mod_root / "descriptor.mod"
+    if not descriptor.is_file():
+        return mod_root.name
+    match = re.search(r'^\s*name\s*=\s*"([^"]+)"', read_text(descriptor), flags=re.MULTILINE)
+    return match.group(1) if match else mod_root.name
 
 
 def translation_keys_root(validate: bool = False) -> Path:

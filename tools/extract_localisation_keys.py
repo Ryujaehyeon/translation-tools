@@ -31,7 +31,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import csv_writer, english_source_root, resolve_pack_path
+from tool_config import csv_writer, english_source_root, read_text, resolve_pack_path
 from tool_config import workshop_root as _configured_workshop_root
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
@@ -76,10 +76,6 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
-def read_text(path: Path) -> str:
-    """Read Paradox localisation files while accepting an optional UTF-8 BOM."""
-    return path.read_text(encoding="utf-8-sig")
 
 
 def strip_trailing_comment(value: str) -> str:
