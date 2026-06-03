@@ -32,7 +32,7 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from token_parser import extract_token_values
+from token_parser import extract_token_values, parse_tokens
 from tool_config import csv_dict_writer, csv_writer, translation_keys_root
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -673,39 +673,41 @@ def find_matching_terms(text: str, glossary: dict[str, str]) -> dict[str, str]:
 
 
 def protect_tokens(value: str) -> tuple[str, dict[str, str]]:
-    # 특수 구분자를 마커로 치환해 AI가 토큰을 누락·변형하지 못하게 보호
-    # - £pop£        → __ICON_pop__    (구분자 타입 prefix로 충돌 방지)
-    # - $energy$     → __DOLLAR_energy__ (동일)
-    # - [Root.GetName] → __B0__        (길고 복잡한 스크립트 표현식 → 순번 마커)
+    # 특수 구분자를 마커로 치환해 AI가 토큰을 누락·변형하지 못하게 보호한다.
+    # 토큰 식별은 token_parser의 범위 인식 파서를 쓴다. 정규식 TOKEN_RE는 닫힘 없는
+    # 아이콘(`£word`)을 §앞에서만 잡지만, 파서는 단어·구두점·줄끝 앞에서도 잡으므로
+    # `1000£energy and`, `£minerals .` 같은 원본 오타 토큰까지 마스킹돼 AI 손상을 막는다.
+    # - £pop£ / £pop  → __ICON_pop__   (구분자 타입 prefix로 $토큰과 충돌 방지)
+    # - $energy$      → __DOLLAR_energy__
+    # - [Root.GetName]→ __B0__          (길고 복잡한 스크립트 표현식 → 순번 마커)
     # - §Y, §!, \n 등 → 그대로 (시스템 프롬프트 규칙으로 보호)
     # 복원 맵: {마커 → 원래 토큰 전체}
     replacements: dict[str, str] = {}
     bracket_counter = 0
+    pieces: list[str] = []
+    last = 0
 
-    def replace(match: re.Match[str]) -> str:
-        nonlocal bracket_counter
-        token = match.group(0)
-        if token.startswith("£"):
+    for span in parse_tokens(value):
+        if span.kind in ("icon", "unclosed_icon"):
             # 정상: £word£ → inner=word / 오타: £word → inner=word (닫는 £ 없음)
-            inner = token[1:-1] if token.endswith("£") else token[1:]
+            inner = span.text[1:-1] if span.text.endswith("£") else span.text[1:]
             marker = f"__ICON_{inner}__"
-            replacements[marker] = token
-            return marker
-        if token.startswith("$") and token.endswith("$"):
-            marker = f"__DOLLAR_{token[1:-1]}__"
-            replacements[marker] = token
-            return marker
-        if token.startswith("[") and token.endswith("]"):
+        elif span.kind == "dollar_ref":
+            marker = f"__DOLLAR_{span.text[1:-1]}__"
+        elif span.kind == "bracket_expr":
             # 스크립트 표현식은 길고 복잡해서 내용을 그대로 두면 AI가 혼란 → 순번 마커
             marker = f"__B{bracket_counter}__"
             bracket_counter += 1
-            replacements[marker] = token
-            return marker
-        # §X, \n, \t 등 — 치환하지 않음
-        return token
+        else:
+            # color_code(§X), escaped_newline(\n) 등 — 치환하지 않고 원문 그대로 둔다
+            continue
+        replacements[marker] = span.text
+        pieces.append(value[last : span.start])
+        pieces.append(marker)
+        last = span.end
 
-    masked = PROTECT_TOKEN_RE.sub(replace, value)
-    return masked, replacements
+    pieces.append(value[last:])
+    return "".join(pieces), replacements
 
 
 def restore_protected_tokens(value: str, replacements: dict[str, str]) -> str:

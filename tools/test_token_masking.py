@@ -29,62 +29,30 @@ import os
 import re
 import sys
 
+from token_parser import TOKEN_TYPES, extract_token_values
 from tool_config import translation_keys_root
+from translate_keys import protect_tokens
 
 
 def get_auto_keys():
     return os.path.normpath(str(translation_keys_root()))
 
 
-# ── TOKEN_RE (translate_keys.py와 동일) ───────────────────────────────────────
-TOKEN_RE = re.compile(
-    r"\$[^$\n\t]+\$|£[^£\s]+(?:£|(?=\s))|\[[^\]\n]+\]|§[A-Za-z0-9!#]|\\n|\\t|\\\"|\\\\"
-)
-
-TOKEN_PATTERNS = {
-    "dollar_ref": re.compile(r"\$[^$\n\t]+\$"),
-    "icon": re.compile(r"£[^£\s]+(?:£|(?=\s))"),
-    "bracket_expr": re.compile(r"\[[^\]\n]+\]"),
-    "color_code": re.compile(r"§[A-Za-z0-9!#]"),
-    "escaped_newline": re.compile(r"\\n"),
-    "escaped_tab": re.compile(r"\\t"),
-    "escaped_quote": re.compile(r"\\\""),
-    "escaped_bs": re.compile(r"\\\\"),
-}
+# 마스킹은 translate_keys.protect_tokens(파서 기반)를 그대로 쓴다. 과거에는 이 파일에
+# TOKEN_RE 사본이 있어 실제 마스킹과 미묘하게 달랐다(닫힘 없는 £ 검출 범위 불일치).
+# 토큰 통계도 token_parser.extract_token_values 한 곳을 기준으로 낸다.
 
 # 마스킹 후 남아서는 안 되는 잔류 패턴
 RESIDUAL_PATTERNS = {
     "unclosed_icon": re.compile(r"£[A-Za-z_][A-Za-z0-9_|]*"),  # £word (닫힘 없음)
     "bracket_expr": re.compile(r"\[[^\]\n]{3,}\]"),  # [...] 미마스킹
-    # 공백 포함 달러 토큰: $Foo Bar$ 형태 (TOKEN_RE가 잡지 못하는 실제 위험 케이스)
+    # 공백 포함 달러 토큰: $Foo Bar$ 형태
     "dollar_with_space": re.compile(r"\$[A-Za-z_][A-Za-z0-9_ ]+\$"),
 }
 
-# 의도적인 닫힘 없는 달러 패턴 (번역 파이프라인에 영향 없음, 진단 참고용)
-_DOLLAR_OK_STANDALONE = [
-    re.compile(r'"(\$[A-Za-z_][A-Za-z0-9_.]*)"'),  # "$name" — 표시용 이름
-    re.compile(r"\$TRIGGER_(?:FAIL|PASS)\$"),
-]
-
 
 def mask(value: str) -> str:
-    counter = [0]
-
-    def replace(m: re.Match) -> str:
-        token = m.group(0)
-        if token.startswith("£"):
-            inner = token[1:-1] if token.endswith("£") else token[1:]
-            return f"__ICON_{inner}__"
-        if token.startswith("$") and token.endswith("$"):
-            return f"__DOLLAR_{token[1:-1]}__"
-        if token.startswith("[") and token.endswith("]"):
-            idx = counter[0]
-            counter[0] += 1
-            return f"__B{idx}__"
-        # §X, \n 등 — 그대로
-        return token
-
-    return TOKEN_RE.sub(replace, value)
+    return protect_tokens(value)[0]
 
 
 # ── 스캔 ──────────────────────────────────────────────────────────────────────
@@ -108,9 +76,9 @@ def scan(auto_keys, mod_filter=None):
                         continue
                     key = row.get("key", "")
 
-                    # 토큰 타입별 카운트
-                    for ttype, pat in TOKEN_PATTERNS.items():
-                        stats[ttype] += len(pat.findall(en))
+                    # 토큰 타입별 카운트 (파서 기준 — 마스킹과 동일한 토큰 정의)
+                    for ttype, vals in extract_token_values(en).items():
+                        stats[ttype] += len(vals)
 
                     # 마스킹 후 잔류 검사
                     masked = mask(en)
@@ -130,7 +98,7 @@ def print_stats(stats, files_seen):
     sys.stdout.buffer.write(
         f"\n=== 토큰 타입별 매칭 통계 (파일 {files_seen}개) ===\n".encode("utf-8")
     )
-    for ttype in TOKEN_PATTERNS:
+    for ttype in TOKEN_TYPES:
         cnt = stats.get(ttype, 0)
         if cnt:
             sys.stdout.buffer.write(f"  {ttype:<20}: {cnt:>6}건\n".encode("utf-8"))
