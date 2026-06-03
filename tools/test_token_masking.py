@@ -31,7 +31,7 @@ import sys
 
 from token_parser import TOKEN_TYPES, extract_token_values
 from tool_config import translation_keys_root
-from translate_keys import protect_tokens
+from translate_keys import protect_tokens, restore_protected_tokens
 
 
 def get_auto_keys():
@@ -53,6 +53,27 @@ RESIDUAL_PATTERNS = {
 
 def mask(value: str) -> str:
     return protect_tokens(value)[0]
+
+
+# 닫힘 없는 £ 아이콘이 번역 복원(protect→restore)에서 정상형 £x£로 교정되는지 회귀 케이스.
+# closed icon / $...$ / [...] 은 원형 그대로 유지돼야 한다.
+NORMALIZATION_CASES = [
+    ("1000£energy and 1000£minerals .", "1000£energy£ and 1000£minerals£ ."),
+    ("£dna £blocker£ Dense Jungle", "£dna£ £blocker£ Dense Jungle"),
+    ("£pop£ §YPop§! [Root.GetName]", "£pop£ §YPop§! [Root.GetName]"),
+    ("§Y$Fleet Capacity$§!", "§Y$Fleet Capacity$§!"),
+]
+
+
+def check_normalization() -> list[str]:
+    """protect→restore에서 닫힘 없는 £가 £x£로 정상화되는지 확인하고 실패 목록을 반환."""
+    fails: list[str] = []
+    for text, expected in NORMALIZATION_CASES:
+        masked, repl = protect_tokens(text)
+        restored = restore_protected_tokens(masked, repl)
+        if restored != expected:
+            fails.append(f"{text!r} -> {restored!r} (기대 {expected!r})")
+    return fails
 
 
 # ── 스캔 ──────────────────────────────────────────────────────────────────────
@@ -137,6 +158,14 @@ def main():
     files_seen, stats, residual = scan(auto_keys, args.mod)
     print_stats(stats, files_seen)
     print_residual(residual, args.n)
+
+    fails = check_normalization()
+    passed = len(NORMALIZATION_CASES) - len(fails)
+    sys.stdout.buffer.write(
+        f"\n=== 닫힘 없는 £ 정상화 회귀 ({passed}/{len(NORMALIZATION_CASES)}) ===\n".encode("utf-8")
+    )
+    for f in fails:
+        sys.stdout.buffer.write(f"  FAIL: {f}\n".encode("utf-8"))
 
 
 if __name__ == "__main__":

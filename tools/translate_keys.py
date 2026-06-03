@@ -674,6 +674,7 @@ def protect_tokens(value: str) -> tuple[str, dict[str, str]]:
     # 아이콘(`£word`)을 §앞에서만 잡지만, 파서는 단어·구두점·줄끝 앞에서도 잡으므로
     # `1000£energy and`, `£minerals .` 같은 원본 오타 토큰까지 마스킹돼 AI 손상을 막는다.
     # - £pop£ / £pop  → __ICON_pop__   (구분자 타입 prefix로 $토큰과 충돌 방지)
+    #   닫힘 없는 £pop은 복원 시 정상형 £pop£로 교정한다(원본 오타 자동 보정).
     # - $energy$      → __DOLLAR_energy__
     # - [Root.GetName]→ __B0__          (길고 복잡한 스크립트 표현식 → 순번 마커)
     # - §Y, §!, \n 등 → 그대로 (시스템 프롬프트 규칙으로 보호)
@@ -697,7 +698,9 @@ def protect_tokens(value: str) -> tuple[str, dict[str, str]]:
         else:
             # color_code(§X), escaped_newline(\n) 등 — 치환하지 않고 원문 그대로 둔다
             continue
-        replacements[marker] = span.text
+        # 닫힘 없는 아이콘은 normalized(£x£)로 복원해 원본 오타를 출력에서 교정한다.
+        # closed icon / dollar_ref / bracket_expr은 normalized가 None이라 span.text 그대로.
+        replacements[marker] = span.normalized or span.text
         pieces.append(value[last : span.start])
         pieces.append(marker)
         last = span.end
