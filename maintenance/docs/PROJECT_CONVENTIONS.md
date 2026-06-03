@@ -51,13 +51,20 @@ Stellaris/Paradox 텍스트 파일은 BOM이 섞여 있어 인코딩을 항상 �
 상세 규칙과 마스킹 방식은 [translation_guidelines.md](translation_guidelines.md)를
 참고하세요. (PYTHON_STYLE_GUIDE.md 9절 "데이터 의미 보존"의 프로젝트 적용분.)
 
-## 경로 해석
+## 공통 유틸 (tool_config)
 
-상대 경로는 직접 다루지 말고 `tool_config`의 헬퍼를 거칩니다.
+여러 도구에 흩어지기 쉬운 trivial 유틸은 직접 정의하지 말고 `tool_config`를 거칩니다.
+(예전엔 `read_text`·`resolve_pack_path`·`descriptor_name`이 각각 7곳·5곳·3곳에
+복붙돼 있어, 인코딩·base 경로가 미묘하게 달라지는 문제가 있었습니다.)
 
 - `resolve_pack_path(raw)` — 상대 경로는 팩 루트 기준, 절대 경로는 그대로 반환.
 - `workshop_root()` / `translation_keys_root()` — 환경 변수 → `tooling.ini` →
   기본값 순으로 해석. 경로를 새로 읽어야 하면 이 함수들을 재사용하세요.
+- `read_text(path)` — Steam/Paradox 텍스트를 BOM·이상 바이트를 견디며 읽습니다
+  (`utf-8-sig` + `errors="replace"`).
+- `descriptor_name(mod_root)` — `descriptor.mod`의 `name="..."`를 반환(없으면 폴더명).
+- `open_csv_write(path)` + `csv_writer` / `csv_dict_writer` — CSV 쓰기 전용
+  (아래 "CSV 줄바꿈·인용 스타일" 절 참고).
 
 ## 자식 프로세스 오케스트레이션
 

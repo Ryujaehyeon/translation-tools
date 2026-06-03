@@ -123,6 +123,11 @@ python tools/import_korean_references.py --mod <mod_slug>__<workshop_id> --refer
 .\run.ps1 validate <workshop_id>
 ```
 
+`validate`는 critical을 검출하면 보정 명령을 출력 끝에 안내한다 — 닫힘 없는 아이콘은
+`fix_quote_issues --only-unclosed-icons`, 그 밖의 토큰 손상은 `--from-worklist`.
+참고로 AI 재번역 시 닫힘 없는 `£word`(원본 모드 오타)는 복원 단계에서 `£word£`로
+자동 정상화되므로, 닫힘 누락 때문에 critical이 새로 생기지는 않는다.
+
 critical 불일치가 남아 있으면:
 
 ```powershell

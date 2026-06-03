@@ -1,4 +1,13 @@
-"""Shared configuration for translation maintenance tools."""
+"""번역 유지보수 도구들이 공통으로 쓰는 설정과 작은 유틸 모음.
+
+경로 해석·텍스트 읽기·CSV 쓰기처럼 여러 도구에 흩어지기 쉬운 헬퍼를 한 곳에 둔다.
+도구에서 똑같은 함수를 다시 정의하지 말고 여기서 import해 재사용한다.
+
+- 경로:   resolve_pack_path / pack_path / workshop_root / translation_keys_root
+- 텍스트: read_text (BOM·이상 바이트를 견디며 읽기)
+- 모드:   descriptor_name (descriptor.mod의 name="..." 값)
+- CSV:    open_csv_write + csv_writer / csv_dict_writer (LF + QUOTE_MINIMAL 강제)
+"""
 
 from __future__ import annotations
 

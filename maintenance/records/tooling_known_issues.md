@@ -80,3 +80,17 @@
 - 원인: 토큰 검수 흐름이 개선되면서 실제 산출물이 바뀌었지만 일부 문서 표현이 예전 계획을 유지하고 있다.
 - 수정 방향: `../docs/workflow.md`와 `../docs/translation_guidelines.md`의 토큰 보완 설명을 현재 산출물 기준으로 갱신한다. `token_reference_latest.csv`를 계속 쓸 계획이 없다면 예전 경로 문구는 제거한다.
 - 확인 방법: `rg -n "token_reference_latest|token_repair_worklist|token_shape_issues" maintenance/*.md`
+
+## 8. 공통 유틸 중복 — 일부 통일, 나머지 후속
+
+- 상태: 부분 수정 (2026-06-03)
+- 우선순위: 낮음
+- 완료: `read_text`(7곳)·`resolve_pack_path`(자체정의 4곳)·`descriptor_name`(3곳)을
+  `tool_config`로 통일. CSV 쓰기는 `open_csv_write`/`csv_writer`/`csv_dict_writer`로,
+  토큰 마스킹/검출은 `token_parser` 한 곳으로 통일(정규식 사본 제거).
+- 남은 중복: `backup_csv`(×4)·`write_json`(×4)·`iter_csv_files`(×3).
+- 원인: `backup_csv`는 시그니처(`backup_csv(path)` vs `backup_csv(path, dir, ts)`)와
+  `BACKUP_ROOT` 백업 경로가 도구마다 달라 단순 통일이 호출부 변경을 부른다.
+- 수정 방향: `tool_config.backup_file(path, source_root, backup_root, timestamp=None)`
+  헬퍼로 묶고 호출부를 맞춘다. `write_json`도 `indent`/인코딩 통일 후 헬퍼화.
+- `slugify`(×2)는 한글 보존 vs ASCII strip로 의도가 달라 통일 대상이 아니다.

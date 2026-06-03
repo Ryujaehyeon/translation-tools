@@ -56,12 +56,15 @@ AI 번역 실행 중 실제로 관찰된 실패 패턴을 정리한다. 각 사�
 
 ## 5. 원본 모드 YML 오타 — 닫는 `£` 누락 + 공백 삽입
 
-- 상태: 부분 수정됨 (2026-05-25 — `£[^£\s]+(?:£|(?=\s+§))` 룩어헤드로 공백 오타 패턴 마스킹 추가)
-- 예시 A: `£unity` (닫는 `£` 완전 누락) — 미해결 (§ 앞 공백 없는 경우 감지 불가)
-- 예시 B: `£opinion  §YOpinion§!`, `£minerals  §YMinerals§!`, `£influence  §YInfluence§!`, `£food  §YFood§!` — 닫는 `£` 대신 공백이 들어간 패턴 (expanded_stellaris_traditions 모드에서 다수 확인)
-- 수정: TOKEN_RE에 `(?:£|(?=\s+§))` lookahead 추가 → `£opinion  §YOpinion§!` 전체가 마스킹되어 번역 후 원본 오타 그대로 복원
-- 잔여: 예시 A처럼 `§` 앞 공백이 없는 완전 누락 케이스는 여전히 감지 불가 → `hard_token_mismatch`
-- 참고: 원본 모드 파일을 직접 수정하는 것은 업스트림 의존성 문제로 권장하지 않음
+- 상태: 수정됨 (2026-06-03 — `token_parser` 범위 인식 파서로 전환 + 마스킹 복원 시 정상화)
+- 예시: `£unity`(완전 누락), `£opinion  §YOpinion§!`, `£minerals .`, `£energy upkeep`,
+  `£dna £blocker£`(deposit 아이콘) — 단어·구두점·줄끝 앞 등 모든 형태
+- 수정: 정규식 TOKEN_RE 대신 `token_parser.parse_tokens`가 닫힘 없는 `£word`를
+  `(?=$|[\s§.,;:!?...])` 룩어헤드로 모두 `unclosed_icon`으로 인식 → 마스킹으로 AI 손상 차단.
+  복원 시 정상형 `£word£`로 자동 교정한다(`protect_tokens`가 `span.normalized` 사용).
+  닫힘 없는 £ 24종 전수 조사 결과 전부 원본 모드 오타(의도된 케이스 0)로 확인됨.
+- 참고: 영어 원문은 추출 원본이라 보존 → `validate`가 `source_unclosed`(style)로 추적.
+  비번역 경로(import 등)는 `fix_quote_issues --only-unclosed-icons`로 일괄 정상화.
 
 ---
 
@@ -87,12 +90,13 @@ AI 번역 실행 중 실제로 관찰된 실패 패턴을 정리한다. 각 사�
 
 ## 9. AI가 토큰 내용을 한국어로 번역 (아이콘 토큰 안의 단어 번역)
 
-- 상태: 미확인 (산발적 발생)
+- 상태: 수정됨 (2026-06-03 — 이슈 5와 동일 원인, 파서 마스킹으로 해결)
 - 재현 키: `decision_esap_industry_modifier_effect` 외
 - 원문 패턴: `£minerals  §YMinerals§!` (이슈 5 오타 포함), `£food  §YFood§!`
 - 실패 양상: 번역 결과에서 `£광물£`, `£식량£`처럼 아이콘 토큰 내부 이름이 한국어로 번역됨
 - 원인: 오타로 인해 마스킹이 안 된 토큰을 AI가 번역 대상으로 처리
-- 현재 대응: `hard_token_mismatch` 기록 → 수동 처리
+- 수정: `token_parser`가 닫힘 없는 `£minerals`도 `unclosed_icon`으로 인식해 마스킹 →
+  AI가 토큰 내부를 못 건드린다. 복원 시 `£minerals£`로 정상화.
 
 ---
 

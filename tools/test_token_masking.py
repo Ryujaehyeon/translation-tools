@@ -1,5 +1,6 @@
 """
-영어 원문(english_value)에 대해 TOKEN_RE 마스킹이 올바르게 동작하는지 검수.
+영어 원문(english_value)에 translate_keys.protect_tokens(파서 기반 마스킹)을 적용해
+토큰 보호와 닫힘 없는 £ 정상화가 올바른지 검수한다(예전 TOKEN_RE 사본은 제거됨).
 
 위키 기준: https://stellaris.paradoxwikis.com/Localisation_modding
   - £name£  : 아이콘 토큰 (앞뒤 £ 필수)
