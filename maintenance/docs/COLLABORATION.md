@@ -299,6 +299,7 @@ gh release upload vX.Y.Z ..\<slug>_vX.Y.Z.zip
 
 | 날짜 | 작업 내용 |
 |---|---|
+| 2026-06-03 | 토큰 마스킹을 범위 인식 파서 기반으로 전환 + 닫힘 없는 `£` 자동 정상화. CSV 쓰기를 LF+QUOTE_MINIMAL로 표준화(`tool_config` 헬퍼), 공통 유틸(`read_text`/`resolve_pack_path`/`descriptor_name`) 통일 |
 | 2026-06-03 | maintenance 문서를 `docs/`, `records/`, `fixtures/`로 역할별 분리 |
 | 2026-06-03 | 범위 인식 토큰 파서(`token_parser.py`)와 사용자 추가형 검출 케이스(`token_detection_cases.jsonl`, `test_token_parser.py`) 도입 |
 | 2026-05-31 | 코드 검수 절차, GitHub 이슈/커밋/CI 확인 흐름 정리 |

@@ -96,7 +96,7 @@ python tools/import_korean_references.py --mod <mod_slug>__<workshop_id> --refer
 
 `import_korean_references.py`는 대상 CSV의 `korean_value`만 채우거나 덮어쓴다. `key`와 `english_value`는 수정하지 않는다.
 
-참고 소스 우선순위 및 옵션 상세: `translation_guidelines.md` → "한국어 참고 소스 우선순위"
+참고 소스 우선순위: `import_korean_references.py`의 `REFERENCE_MOD_IDS` 주석. 옵션 상세: `tools_overview.md`
 
 ### 4. AI 번역 (빈 행 채우기)
 

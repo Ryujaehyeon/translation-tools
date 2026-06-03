@@ -17,4 +17,4 @@ Stellaris 모드 한국어 번역 애드온 제작용 유지보수 도구 모음
 
 ## 주의
 
-`tools/openai_api_key.txt`, 리포트, 백업, CSV는 `.gitignore`로 제외됩니다.
+`tools/api_key.txt`, 리포트, 백업, CSV는 `.gitignore`로 제외됩니다.

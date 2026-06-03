@@ -89,7 +89,7 @@ maintenance/reports/ai_translation/translate_keys_report_<timestamp>.json
 MKC, 한국어 보완 모드, MKC Addon, Giga 한국어 패치 등에서 같은 키의 번역을 찾아 `korean_value`에 복사한다.
 이 도구는 기본 파이프라인의 필수 단계가 아니다. 참고 번역 소스를 새로 반영하고 싶을 때만 수동 실행하거나 `run_pipeline.py --import-korean-references`로 켠다.
 
-참고 소스 우선순위 및 Workshop ID 목록: `translation_guidelines.md` → "한국어 참고 소스 우선순위"
+참고 소스 우선순위 및 Workshop ID 목록: `import_korean_references.py`의 `REFERENCE_MOD_IDS` 주석
 
 기본 동작:
 

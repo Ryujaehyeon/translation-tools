@@ -1,6 +1,6 @@
 # Stellaris 한국어 번역 지침
 
-최종 갱신: 2026-05-25
+최종 갱신: 2026-06-03
 
 번역 작업 시 지켜야 하는 규칙을 정리한다.
 작업 순서와 명령어는 `workflow.md`, 도구 옵션은 `tools_overview.md`를 참조한다.
@@ -132,29 +132,6 @@ $ap_aggressive_hivemind_desc$\n\n$ap_aggressive_hivemind_tooltip$
 | Dark Matter | 암흑 물질 |
 | Living Metal | 생체 금속 |
 | Zro | 즈로 |
-
----
-
-## 한국어 참고 소스 우선순위
-
-같은 키의 한국어 번역이 이미 존재하면 AI 번역보다 우선한다.
-
-1. `2506141839` — Mod Korean Collection
-2. `2918194940` — 한국어 보완 모드
-3. MKC Addon 계열:
-   - `2524944243` — MKC Addon: Gigastructural Engineering & More
-   - `2524947989` — MKC Addon: NSC2 Season 7
-   - `2836348228` — MKC Addon: Even More Origins
-   - `2836353697` — MKC Addon: Expanded Stellaris Traditions
-   - `2836362654` — MKC Addon: More Events Mod
-   - `2836364177` — MKC Addon: Plentiful Traditions
-   - `2836366568` — MKC Addon: Merged Leader Levels
-   - `2836367458` — MKC Addon: TraitDiversity
-   - `2880546634` — MKC Addon: Planetary Diversity
-4. `2994467117` — Giga 전용 한국어 패치
-5. 원본 모드에 포함된 `localisation/korean`
-
-단, 참고 번역도 토큰이 깨져 있으면 그대로 신뢰하지 않는다. 원문 토큰과 비교해 누락·추가가 있으면 검수 대상으로 둔다.
 
 ---
 
