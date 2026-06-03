@@ -30,7 +30,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from tool_config import translation_keys_root
+from tool_config import csv_dict_writer, csv_writer, translation_keys_root
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PACK_ROOT = SCRIPT_DIR.parent
@@ -117,7 +117,7 @@ def export_csv(rows: list[dict], mod_filter: str, output: Path) -> None:
         "korean_value",
     ]
     with output.open("w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv_dict_writer(f, fieldnames=fieldnames)
         writer.writeheader()
         for r in filtered:
             writer.writerow(
@@ -185,7 +185,7 @@ def apply_csv(input_path: Path) -> None:
         # 원자적 저장
         temp = csv_path.with_suffix(csv_path.suffix + ".tmp")
         with temp.open("w", encoding="utf-8-sig", newline="") as f:
-            writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+            writer = csv_writer(f, quoting=csv.QUOTE_MINIMAL)
             writer.writerow(fieldnames)
             for row in target_rows:
                 writer.writerow([row.get(fn, "") or "" for fn in fieldnames])

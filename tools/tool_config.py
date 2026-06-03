@@ -3,14 +3,44 @@
 from __future__ import annotations
 
 import configparser
+import csv
 import os
 from pathlib import Path
+from typing import IO, Iterable
 
 PACK_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = PACK_ROOT / "maintenance" / "tooling.ini"
 TRANSLATION_KEYS_ENV = "STELLARIS_TRANSLATION_KEYS_DIR"
 DEFAULT_TRANSLATION_KEYS = "maintenance/translation_keys"
 DEFAULT_WORKSHOP_ROOT = r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990"
+
+# CSV 행 구분자는 항상 LF로 고정한다. csv 모듈 기본값은 CRLF라서, Windows에서
+# 도구가 LF 원본 CSV를 다시 쓰면 모든 줄이 CRLF로 바뀌어 전체 파일이 변경된 것처럼
+# 보인다(실제 내용 변경이 EOL 노이즈에 묻힘). 아래 헬퍼로만 CSV를 쓰도록 통일한다.
+CSV_LINE_TERMINATOR = "\n"
+
+
+def open_csv_write(path: Path) -> IO[str]:
+    """Open a path for CSV writing with newline translation disabled.
+
+    csv.writer가 직접 줄 끝을 제어하도록 ``newline=""``로 연다. 줄 끝은 함께 쓰는
+    ``csv_writer`` / ``csv_dict_writer``가 LF로 emit한다.
+    """
+    return path.open("w", encoding="utf-8-sig", newline="")
+
+
+def csv_writer(handle: IO[str], **kwargs: object) -> "csv._writer":
+    """csv.writer wrapper that emits LF line endings instead of the CRLF default."""
+    kwargs.setdefault("lineterminator", CSV_LINE_TERMINATOR)
+    return csv.writer(handle, **kwargs)
+
+
+def csv_dict_writer(
+    handle: IO[str], fieldnames: Iterable[str], **kwargs: object
+) -> csv.DictWriter:
+    """csv.DictWriter wrapper that emits LF line endings instead of the CRLF default."""
+    kwargs.setdefault("lineterminator", CSV_LINE_TERMINATOR)
+    return csv.DictWriter(handle, fieldnames=fieldnames, **kwargs)
 
 
 def _read_config() -> configparser.ConfigParser:

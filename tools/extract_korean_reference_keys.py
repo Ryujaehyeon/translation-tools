@@ -10,12 +10,13 @@ left blank so downstream import can overwrite only the `korean_value` column.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+
+from tool_config import csv_writer
 
 DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
 PACK_ROOT = Path(__file__).resolve().parents[1]
@@ -150,7 +151,7 @@ def relative_korean_path(path: Path, source_root: Path) -> Path:
 def write_reference_csv(path: Path, entries: list[tuple[str, str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.writer(handle)
+        writer = csv_writer(handle)
         writer.writerow(["key", "english_value", "korean_value"])
         for key, korean_value in entries:
             writer.writerow([key, "", korean_value])

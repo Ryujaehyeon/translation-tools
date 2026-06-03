@@ -19,7 +19,7 @@ import glob
 import shutil
 from pathlib import Path
 
-from tool_config import translation_keys_root
+from tool_config import csv_dict_writer, translation_keys_root
 
 PACK_ROOT = Path(__file__).resolve().parents[1]
 AUTO_KEYS_DIR = translation_keys_root()
@@ -55,7 +55,7 @@ def backup_csv(path: Path) -> Path:
 def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     with tmp.open("w", encoding="utf-8-sig", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w = csv_dict_writer(f, fieldnames=fieldnames)
         w.writeheader()
         w.writerows(rows)
     shutil.move(str(tmp), str(path))

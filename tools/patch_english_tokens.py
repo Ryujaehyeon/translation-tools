@@ -32,7 +32,7 @@ import re
 import shutil
 import sys
 
-from tool_config import translation_keys_root
+from tool_config import csv_dict_writer, translation_keys_root
 
 
 def get_paths():
@@ -192,7 +192,7 @@ def build_report(auto_keys, reports):
                 print(f"ERROR {rel}: {e}", file=sys.stderr)
 
     with open(out_path, "w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv_dict_writer(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
@@ -252,7 +252,7 @@ def apply_report(report_path, auto_keys, backups):
                 n_changed += 1
 
         with open(csv_path, "w", encoding="utf-8-sig", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer = csv_dict_writer(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(all_rows)
 

@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from token_parser import extract_token_values
-from tool_config import translation_keys_root
+from tool_config import csv_dict_writer, csv_writer, translation_keys_root
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PACK_ROOT = SCRIPT_DIR.parent
@@ -1310,11 +1310,11 @@ def count_candidates(
 def write_rows_atomic(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> None:
     # .tmp 임시 파일에 쓰고 완료 후 rename — 중간에 프로세스가 죽어도 파일 손상 없음.
     # row의 english/korean_value는 CsvCell raw 값 (`"내용"` 형태).
-    # csv.writer(QUOTE_MINIMAL)가 이를 파일에 `"""내용"""` 으로 올바르게 escape한다.
+    # csv_writer(QUOTE_MINIMAL)가 이를 파일에 `"""내용"""` 으로 올바르게 escape한다.
     # translate_value 단계에서 이미 정리됐으므로 저장 시 추가 변환 없이 그대로 쓴다.
     temp_path = path.with_suffix(path.suffix + ".tmp")
     with temp_path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.writer(handle, quoting=csv.QUOTE_MINIMAL)
+        writer = csv_writer(handle, quoting=csv.QUOTE_MINIMAL)
         writer.writerow(fieldnames)
         for row in rows:
             writer.writerow([row.get(f, "") or "" for f in fieldnames])
@@ -1729,7 +1729,7 @@ def write_sample_csv(path: Path, rows: list[dict[str, str]]) -> None:
         "note",
     ]
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv_dict_writer(handle, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
             writer.writerow(

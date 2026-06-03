@@ -27,6 +27,7 @@ from tool_config import (
     PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
 )
 from tool_config import (
+    csv_dict_writer,
     resolve_pack_path,
 )
 from tool_config import (
@@ -263,7 +264,7 @@ def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, object]]) 
     """Write a UTF-8 BOM CSV worklist."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv_dict_writer(handle, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
             writer.writerow(row)

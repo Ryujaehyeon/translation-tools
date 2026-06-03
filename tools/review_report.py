@@ -61,7 +61,7 @@ from pathlib import Path
 # translate_keys가 같은 tools/ 폴더에 있으므로 해당 디렉토리를 경로에 추가
 sys.path.insert(0, str(Path(__file__).parent))
 
-from tool_config import translation_keys_root
+from tool_config import csv_dict_writer, translation_keys_root
 from translate_keys import (
     HANGUL_RE,
     _strip_all_tokens,
@@ -377,7 +377,7 @@ def run(
         "retranslate",
     ]
     with output.open("w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv_dict_writer(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(all_rows)
 

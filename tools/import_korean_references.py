@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import translation_keys_root
+from tool_config import csv_dict_writer, csv_writer, translation_keys_root
 
 PACK_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUTO_KEYS_DIR = translation_keys_root()
@@ -400,7 +400,7 @@ def _yml_value_to_csv_raw(yml_value: str, english_raw: str) -> str:
 def write_csv_report(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv_dict_writer(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
@@ -479,7 +479,7 @@ def process_file(
         backup_csv(csv_path, auto_keys_dir, timestamp)
         temp = csv_path.with_suffix(csv_path.suffix + ".tmp")
         with temp.open("w", encoding="utf-8-sig", newline="") as handle:
-            writer = csv.writer(handle, quoting=csv.QUOTE_MINIMAL)
+            writer = csv_writer(handle, quoting=csv.QUOTE_MINIMAL)
             writer.writerow(fieldnames)
             for row in rows:
                 writer.writerow([row.get(f, "") or "" for f in fieldnames])

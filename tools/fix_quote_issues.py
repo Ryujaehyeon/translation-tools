@@ -44,7 +44,7 @@ from datetime import datetime
 from pathlib import Path
 
 from token_parser import close_unclosed_icons
-from tool_config import translation_keys_root
+from tool_config import csv_dict_writer, translation_keys_root
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTO_KEYS_DIR = translation_keys_root()
@@ -138,7 +138,10 @@ def read_csv_rows(path: Path) -> tuple[list[str], list[dict[str, str]]]:
 def write_csv_rows(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> None:
     temp_path = path.with_suffix(path.suffix + ".tmp")
     with temp_path.open("w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_ALL)
+        # 원본 translation_keys CSV는 QUOTE_MINIMAL로 작성된다(extract/translate 기준).
+        # 여기서 QUOTE_ALL로 쓰면 보정하지 않은 행의 key 컬럼까지 따옴표가 붙어 파일
+        # 전체가 변경된 것처럼 보인다. 표준에 맞춰 QUOTE_MINIMAL로 쓴다.
+        writer = csv_dict_writer(f, fieldnames=fieldnames, quoting=csv.QUOTE_MINIMAL)
         writer.writeheader()
         for row in rows:
             writer.writerow(row)

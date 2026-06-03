@@ -13,10 +13,11 @@ english, korean 쌍을 term_glossary.csv로 출력한다.
 from __future__ import annotations
 
 import argparse
-import csv
 import re
 import sys
 from pathlib import Path
+
+from tool_config import csv_dict_writer
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PACK_ROOT = SCRIPT_DIR.parent
@@ -349,7 +350,7 @@ def main() -> int:
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["english", "korean", "key"])
+        writer = csv_dict_writer(f, ["english", "korean", "key"])
         writer.writeheader()
         writer.writerows(deduped)
 

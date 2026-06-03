@@ -24,6 +24,8 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from tool_config import csv_dict_writer
+
 DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = Path(__file__).resolve().parents[2] / "integrated_korean_translation_pack"
@@ -203,7 +205,7 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     """Write the conflict-resolution work CSV."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=CSV_FIELDS)
+        writer = csv_dict_writer(handle, CSV_FIELDS)
         writer.writeheader()
         for row in rows:
             writer.writerow(row)

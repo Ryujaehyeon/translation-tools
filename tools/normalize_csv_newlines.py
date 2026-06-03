@@ -9,6 +9,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from tool_config import csv_dict_writer
+
 PACK_ROOT = Path(__file__).resolve().parents[1]
 BACKUP_ROOT = PACK_ROOT / "maintenance" / "backups" / "normalize_csv_newlines"
 
@@ -71,7 +73,7 @@ def main() -> int:
 
     temp_path = path.with_suffix(path.suffix + ".tmp")
     with temp_path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv_dict_writer(handle, fieldnames)
         writer.writeheader()
         writer.writerows(rows)
     shutil.move(str(temp_path), str(path))

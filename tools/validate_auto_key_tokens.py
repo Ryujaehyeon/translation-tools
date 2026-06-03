@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Iterable
 
 from token_parser import extract_token_values
-from tool_config import translation_keys_root
+from tool_config import csv_dict_writer, translation_keys_root
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUTO_KEYS = translation_keys_root()
@@ -550,7 +550,7 @@ def issue_to_row(issue: TokenIssue) -> dict[str, object]:
 def write_rows(path: Path, fieldnames: list[str], rows: Iterable[dict[str, object]]) -> int:
     count = 0
     with path.open("w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv_dict_writer(f, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
             count += 1

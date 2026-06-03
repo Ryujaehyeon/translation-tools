@@ -11,7 +11,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 TOKEN_TYPES = (
     "dollar_ref",
     "icon",

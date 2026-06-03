@@ -31,7 +31,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from tool_config import english_source_root, resolve_pack_path
+from tool_config import csv_writer, english_source_root, resolve_pack_path
 from tool_config import workshop_root as _configured_workshop_root
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
@@ -298,7 +298,7 @@ def main() -> int:
             )
         csv_path.parent.mkdir(parents=True, exist_ok=True)
         with csv_path.open("w", encoding="utf-8-sig", newline="") as handle:
-            writer = csv.writer(handle)
+            writer = csv_writer(handle)
             # korean_value is intentionally blank: it is the user's editable
             # column for manual translations or scripted translation output.
             writer.writerow(["key", "english_value", "korean_value"])

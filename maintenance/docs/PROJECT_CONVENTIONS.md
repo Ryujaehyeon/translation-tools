@@ -25,6 +25,20 @@ Stellaris/Paradox 텍스트 파일은 BOM이 섞여 있어 인코딩을 항상 �
   `descriptor.mod`는 BOM 없는 `utf-8`**로 씁니다
   (`tool_config.ensure_standalone_mod` 참고).
 
+## CSV 줄바꿈·인용 스타일
+
+`translation_keys` CSV는 **LF 줄바꿈 + `QUOTE_MINIMAL`**로 통일합니다. 둘 다 표준에서
+벗어나면 보정하지 않은 행까지 전부 바뀐 것처럼 보여 diff가 오염됩니다.
+
+- **줄바꿈**: Python `csv` 모듈은 기본으로 `\r\n`(CRLF)을 씁니다. LF 원본을 Windows에서
+  다시 쓰면 모든 줄이 CRLF로 바뀌어 실제 내용 변경이 EOL 노이즈에 묻힙니다.
+- **인용**: 원본은 `QUOTE_MINIMAL`(필요한 셀만 인용)입니다. `QUOTE_ALL`로 쓰면 `key`
+  컬럼까지 따옴표가 붙어 파일 전체가 변경됩니다.
+- CSV를 쓸 때는 반드시 `tool_config`의 `open_csv_write` + `csv_writer` /
+  `csv_dict_writer` 헬퍼를 씁니다. 이 헬퍼가 `lineterminator="\n"`을 강제합니다.
+  `quoting`은 기본값(`QUOTE_MINIMAL`)을 그대로 두고 `QUOTE_ALL`은 쓰지 않습니다.
+- 줄 끝 노이즈가 이미 섞인 CSV는 헬퍼로 다시 한 번 써서 정규화합니다.
+
 ## 보존 대상 토큰
 
 번역 텍스트에는 게임이 해석하는 토큰이 들어 있습니다. 텍스트를 가공하는 코드는
