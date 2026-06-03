@@ -272,6 +272,10 @@ maintenance/reports/token_validation/quote_issues_<timestamp>.csv
 
 `token_repair_worklist_*.csv`는 `translate_keys.py --from-worklist`에 바로 사용한다.
 
+critical이 있으면 실행 끝에 보정 명령을 복사할 수 있게 안내한다. 닫힘 없는 아이콘은
+`fix_quote_issues --only-unclosed-icons`(영향 모드까지 채움), 그 밖의 토큰 손상은
+`translate_keys --from-worklist`(worklist 경로까지 채움) 명령으로 나뉘어 출력된다.
+
 ---
 
 ## fix_quote_issues.py

@@ -742,7 +742,39 @@ def main() -> int:
     print(f'mod_summary_csv="{mod_summary_csv}"')
     print(f'file_summary_csv="{file_summary_csv}"')
     print(f'json_report="{json_report}"')
+
+    print_next_steps(issues, repair_csv)
     return 0
+
+
+def print_next_steps(issues: list[TokenIssue], repair_csv: Path) -> None:
+    """검출된 critical 유형에 맞는 보정 명령을 그대로 복사할 수 있게 안내한다.
+
+    - 닫힘 없는 아이콘(`£word`)은 `fix_quote_issues --only-unclosed-icons`로 재번역
+      없이 일괄 보정한다. 해당 모드만 모아 명령을 만든다.
+    - 그 밖의 토큰 손상(`$ref$`/`£icon£` 누락 등)은 재번역이 필요하므로 worklist를
+      `translate_keys --from-worklist`로 넘기도록 안내한다.
+    """
+    criticals = [issue for issue in issues if issue.severity == "critical"]
+    if not criticals:
+        return
+
+    unclosed_mods = sorted(
+        {issue.mod for issue in criticals if "unclosed_icon" in issue.issue_types}
+    )
+    needs_retranslate = [
+        issue for issue in criticals if "unclosed_icon" not in issue.issue_types
+    ]
+
+    print()
+    print(f"critical {len(criticals)}건 — 보정 방법:")
+    if unclosed_mods:
+        mod_args = " ".join(f"--mod {mod}" for mod in unclosed_mods)
+        print(f"  · 닫힘 없는 아이콘 {len(unclosed_mods)}개 모드 (재번역 불필요):")
+        print(f"      python tools/fix_quote_issues.py --scan --only-unclosed-icons {mod_args}")
+    if needs_retranslate:
+        print(f"  · 그 밖의 토큰 손상 {len(needs_retranslate)}건 (worklist 재번역):")
+        print(f'      python tools/translate_keys.py --from-worklist "{repair_csv}"')
 
 
 if __name__ == "__main__":

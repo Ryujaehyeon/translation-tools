@@ -389,6 +389,9 @@ def _print_summary(
     print(f"  over-escape 보정: {over_escape}건")
     print(f"  닫힘 없는 아이콘 보정: {icon}건")
     print(f"  합계: {total}건")
+    if not dry_run and total > 0:
+        print("\n보정 결과를 validate로 재확인하세요:")
+        print("  python tools/validate_auto_key_tokens.py")
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
