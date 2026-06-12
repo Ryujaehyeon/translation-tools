@@ -1,10 +1,11 @@
 ﻿# 통합 번역팩 자동 처리 매뉴얼
 
-최종 갱신: 2026-06-03
+최종 갱신: 2026-06-12
 
 역할: **사용자용 빠른 사용 설명서**. 설치, 첫 실행, 기본 명령만 다룬다.
 유지보수 작업의 정확한 순서는 `workflow.md`, 도구 옵션 전체는 `tools_overview.md`,
-협업 맥락은 `COLLABORATION.md`, 최신 인계는 `../../../HANDOFF.md`를 기준으로 본다.
+협업 맥락은 `COLLABORATION.md`, 최신 인계는 `../../../HANDOFF.md`(이 저장소 밖,
+번역팩 작업 폴더 `mod/` 바로 아래)를 기준으로 본다.
 
 넣지 말 것:
 
@@ -17,15 +18,19 @@
 
 ### 사전 요구사항
 
-- Python 3.10 이상
-- PowerShell 7 이상 (Windows 기본 PowerShell 5는 불가)
-- Steam + Stellaris 설치됨
+- Windows (Steam 경로 자동 탐지가 Windows 기준. 다른 OS는 `maintenance/tooling.ini`에 경로 직접 지정)
+- Python 3.10 이상 (도구는 표준 라이브러리만 사용. 외부 프로그램 불필요)
+- PowerShell 7 이상 — `run.ps1` 런처를 쓸 때만 필요 (Windows 기본 PowerShell 5는 불가. `python tools/...` 직접 실행은 셸 무관)
+- Steam + Stellaris 설치됨 (Workshop 모드 구독 폴더가 있어야 함)
 
-### 패키지 설치
+### 패키지 설치 (AI 자동 번역 사용 시에만)
 
 ```powershell
 pip install -r tools/requirements.txt
 ```
+
+`anthropic`/`openai` 패키지는 AI 자동 번역(`translate`)에만 쓰인다.
+수동 번역 흐름만 쓸 경우 이 단계는 건너뛰어도 된다.
 
 ### 폴더 구조
 
@@ -41,7 +46,7 @@ mod/
 ```
 
 Steam 경로(`workshop/content/281990`)는 자동으로 탐지한다.
-Windows 기본 설치 경로(`C:\Program Files (x86)\Steam` 또는 `D:\...`)를 자동으로 찾으며, 찾지 못하면 `tooling.ini`에서 직접 지정할 수 있다.
+Windows 기본 설치 경로(`C:\Program Files (x86)\Steam` 또는 `D:\...`)를 자동으로 찾으며, 찾지 못하면 `maintenance/tooling.ini`의 `[paths] workshop_root`에 직접 지정할 수 있다.
 
 ### API 키 설정 (선택)
 
@@ -54,7 +59,7 @@ tools/api_key.txt   # 파일 내용: API 키 문자열만 (주석은 # 으로 �
 지원 provider:
 
 - `sk-ant-...` → Anthropic (Claude) — 기본 모델: `claude-haiku-4-5-20251001`
-- `sk-...`     → OpenAI             — 기본 모델: `gpt-4o-mini` (기본값, 가장 저렴)
+- `sk-...`     → OpenAI             — 기본 모델: `gpt-4o-mini`
 
 환경 변수로도 설정 가능: `ANTHROPIC_API_KEY` 또는 `OPENAI_API_KEY`
 
@@ -229,6 +234,19 @@ python tools/run_pipeline.py --mode report --use-cache --workers 4
 
 ## 개별 도구 사용
 
+`run.ps1`이 자주 쓰는 도구의 런처다. 전체 액션과 옵션은 `.\run.ps1 -?` 또는
+`tools_overview.md`를 본다. 자주 쓰는 액션:
+
+| 액션 | 하는 일 |
+|---|---|
+| `extract` | 키 CSV 추출 |
+| `export` | 한국어 yml 생성/갱신 |
+| `translate` | AI 자동 번역 (API 키 필요) |
+| `review` | 번역 품질 검수 리포트 |
+| `validate` | 결과 yml 검증 |
+| `import-ref` | 한국어 참조 모드 번역 임포트 |
+| `full-check` | validate + review + progress 한번에 |
+
 ### 키 CSV 추출
 
 ```powershell
@@ -244,13 +262,20 @@ python tools/run_pipeline.py --mode report --use-cache --workers 4
 ### 번역 파일 생성 dry-run
 
 ```powershell
+.\run.ps1 export "모드id" --dry-run
+```
+
+CSV 폴더는 `maintenance/translation_keys/` 아래에서 모드 id로 자동 탐지된다.
+다른 폴더를 쓰려면 두 번째 인자로 직접 지정한다.
+
+```powershell
 .\run.ps1 export "모드id" "maintenance/translation_keys/모드명__모드id" --dry-run
 ```
 
 ### 번역 파일 실제 생성/갱신
 
 ```powershell
-.\run.ps1 export "모드id" "maintenance/translation_keys/모드명__모드id"
+.\run.ps1 export "모드id"
 ```
 
 ### 결과 검증
@@ -326,7 +351,7 @@ python tools/run_pipeline.py --mode auto --use-cache
 
 ## 수동 번역 흐름 (AI API 없이)
 
-OpenAI API 키가 없거나 AI 번역을 사용하지 않을 때는 CSV를 직접 편집해 `korean_value`를 채운다.
+API 키(Anthropic/OpenAI)가 없거나 AI 번역을 사용하지 않을 때는 CSV를 직접 편집해 `korean_value`를 채운다.
 
 ### 1. 키 CSV 추출
 
