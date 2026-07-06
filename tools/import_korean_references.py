@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import re
 import shutil
 from collections import Counter
@@ -24,6 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from csv_io import copy_csv_backup, write_json
 from tool_config import (
     csv_dict_writer,
     csv_writer,
@@ -32,6 +32,7 @@ from tool_config import (
     resolve_pack_path,
     translation_keys_root,
 )
+from yml_localisation import HEADER_RE, parse_entry
 
 PACK_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUTO_KEYS_DIR = translation_keys_root()
@@ -56,9 +57,6 @@ REFERENCE_MOD_IDS = [
     "2880546634",  # MKC Addon: Planetary Diversity
     "2994467117",  # Giga 전용 한국어 패치
 ]
-
-ENTRY_RE = re.compile(r"^\s*([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
-HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 
 TOKEN_PATTERNS = {
     "dollar": re.compile(r"\$[^$\n]+\$"),
@@ -197,11 +195,11 @@ def iter_localisation_entries(path: Path) -> list[tuple[int, str, str]]:
     for line_number, line in enumerate(read_text(path).splitlines(), start=1):
         if HEADER_RE.match(line):
             continue
-        match = ENTRY_RE.match(line)
-        if not match:
+        entry = parse_entry(line)
+        if entry is None:
             continue
-        key = match.group(1).strip()
-        value = match.group(3).strip() if match.group(3) else ""
+        key = entry.key.strip()
+        value = entry.value.strip() if entry.value else ""
         if key:
             entries.append((line_number, key, value))
     return entries
@@ -370,13 +368,7 @@ def token_issue_types(english_value: str, korean_value: str) -> list[str]:
 
 
 def backup_csv(path: Path, auto_keys_dir: Path, timestamp: str) -> None:
-    try:
-        rel = path.relative_to(auto_keys_dir)
-    except ValueError:
-        rel = Path(path.name)
-    dest = BACKUP_ROOT / timestamp / rel
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(path, dest)
+    copy_csv_backup(path, BACKUP_ROOT / timestamp, auto_keys_dir)
 
 
 def _yml_value_to_csv_raw(yml_value: str, english_raw: str) -> str:
@@ -398,11 +390,6 @@ def write_csv_report(path: Path, rows: list[dict[str, object]], fieldnames: list
         writer = csv_dict_writer(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
-
-
-def write_json(path: Path, payload: dict[str, object]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8-sig")
 
 
 def process_file(

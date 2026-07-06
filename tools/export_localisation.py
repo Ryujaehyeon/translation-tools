@@ -18,13 +18,13 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import re
 import shutil
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from csv_io import write_json
 from tool_config import (
     PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
 )
@@ -35,13 +35,12 @@ from tool_config import (
 from tool_config import (
     workshop_root as _configured_workshop_root,
 )
+from yml_localisation import HEADER_RE, parse_entry
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 # PACK_ROOT: --output-root 미지정 시 폴백. tool_config 기준으로 통일
 PACK_ROOT = _TOOL_CONFIG_PACK_ROOT.parent / "integrated_korean_translation_pack"
-ENTRY_RE = re.compile(r"^(\s*)([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
-HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -93,12 +92,12 @@ def parse_entries(path: Path) -> dict[str, str]:
     for line in read_text(path).splitlines():
         if HEADER_RE.match(line):
             continue
-        match = ENTRY_RE.match(line)
-        if not match:
+        entry = parse_entry(line)
+        if entry is None:
             continue
-        key = match.group(2).strip()
-        version = match.group(3)
-        value = match.group(4)
+        key = entry.key.strip()
+        version = entry.version
+        value = entry.value
         if version is None:
             entries[key] = f" {key}: {value}".rstrip()
         else:
@@ -267,9 +266,8 @@ def backup_file(path: Path, backup_root: Path, korean_root: Path) -> None:
 
 def write_report(report: dict, reports_root: Path, timestamp: str) -> Path:
     """Write the JSON report for this run."""
-    reports_root.mkdir(parents=True, exist_ok=True)
     report_path = reports_root / f"export_localisation_report_{timestamp}.json"
-    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8-sig")
+    write_json(report_path, report)
     return report_path
 
 

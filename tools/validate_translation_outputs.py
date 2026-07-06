@@ -17,12 +17,11 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
-import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from csv_io import write_json
 from tool_config import (
     PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
 )
@@ -34,12 +33,11 @@ from tool_config import (
 from tool_config import (
     workshop_root as _configured_workshop_root,
 )
+from yml_localisation import HEADER_RE, parse_entry
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = _TOOL_CONFIG_PACK_ROOT.parent / "integrated_korean_translation_pack"
-ENTRY_RE = re.compile(r"^(\s*)([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
-HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -119,11 +117,11 @@ def parse_localisation_file(path: Path) -> tuple[dict[str, str], list[dict[str, 
             header_count += 1
             continue
 
-        match = ENTRY_RE.match(line)
-        if match:
-            key = match.group(2).strip()
-            version = match.group(3)
-            value = match.group(4)
+        entry = parse_entry(line)
+        if entry is not None:
+            key = entry.key.strip()
+            version = entry.version
+            value = entry.value
             if version is None:
                 entries[key] = f" {key}: {value}".rstrip()
             else:
@@ -265,12 +263,6 @@ def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, object]]) 
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
-
-
-def write_json(path: Path, payload: dict) -> None:
-    """Write a UTF-8 BOM JSON summary report."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8-sig")
 
 
 def main() -> int:

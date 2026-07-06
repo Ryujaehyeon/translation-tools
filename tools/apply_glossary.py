@@ -19,6 +19,7 @@ import glob
 import shutil
 from pathlib import Path
 
+from csv_io import copy_csv_backup, read_csv_dicts
 from tool_config import csv_dict_writer, translation_keys_root
 
 PACK_ROOT = Path(__file__).resolve().parents[1]
@@ -42,14 +43,7 @@ def load_glossary(path: Path) -> list[tuple[str, str, str]]:
 
 def backup_csv(path: Path) -> Path:
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-    try:
-        rel = path.relative_to(AUTO_KEYS_DIR)
-    except ValueError:
-        rel = Path(path.name)
-    backup_path = BACKUP_ROOT / timestamp / rel
-    backup_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(path, backup_path)
-    return backup_path
+    return copy_csv_backup(path, BACKUP_ROOT / timestamp, AUTO_KEYS_DIR)
 
 
 def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> None:
@@ -68,10 +62,7 @@ def apply_glossary(
     dry_run: bool,
 ) -> tuple[int, int, list[dict[str, str]]]:
     """반환: (검사한 행 수, 교체된 행 수, 변경 내역 목록)"""
-    with filepath.open(encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        fieldnames = list(reader.fieldnames or [])
-        rows = list(reader)
+    fieldnames, rows = read_csv_dicts(filepath)
 
     if (
         "key" not in fieldnames

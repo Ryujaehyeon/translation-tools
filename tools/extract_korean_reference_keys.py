@@ -10,18 +10,17 @@ left blank so downstream import can overwrite only the `korean_value` column.
 from __future__ import annotations
 
 import argparse
-import json
 import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from csv_io import write_json
 from tool_config import csv_writer, descriptor_name, read_text, resolve_pack_path
+from yml_localisation import HEADER_RE, parse_entry
 
 DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
 PACK_ROOT = Path(__file__).resolve().parents[1]
-ENTRY_RE = re.compile(r"^\s*([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
-HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 
 
 @dataclass(frozen=True)
@@ -105,11 +104,11 @@ def iter_entries(path: Path) -> list[tuple[str, str]]:
     for line in read_text(path).splitlines():
         if HEADER_RE.match(line):
             continue
-        match = ENTRY_RE.match(line)
-        if not match:
+        entry = parse_entry(line)
+        if entry is None:
             continue
-        key = match.group(1).strip()
-        korean_value = match.group(3).strip() if match.group(3) else ""
+        key = entry.key.strip()
+        korean_value = entry.value.strip() if entry.value else ""
         if key and key not in seen:
             entries.append((key, korean_value))
             seen.add(key)
@@ -185,18 +184,14 @@ def main() -> int:
 
     report_dir.mkdir(parents=True, exist_ok=True)
     report_path = report_dir / f"korean_reference_extraction_report_{timestamp}.json"
-    report_path.write_text(
-        json.dumps(
-            {
-                "output_dir": str(output_root),
-                "sources": summaries,
-                "total_written_csv_files": total_files,
-                "total_written_rows": total_rows,
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8-sig",
+    write_json(
+        report_path,
+        {
+            "output_dir": str(output_root),
+            "sources": summaries,
+            "total_written_csv_files": total_files,
+            "total_written_rows": total_rows,
+        },
     )
 
     print(f"sources={len(sources)}")

@@ -43,6 +43,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from csv_io import copy_csv_backup, read_csv_dicts
 from token_parser import close_unclosed_icons
 from tool_config import csv_dict_writer, translation_keys_root
 
@@ -128,11 +129,7 @@ def fix_unclosed_icon_tokens(value: str) -> tuple[str, bool]:
 
 def read_csv_rows(path: Path) -> tuple[list[str], list[dict[str, str]]]:
     """헤더와 전체 행을 읽어 반환."""
-    with path.open("r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        fieldnames = list(reader.fieldnames or [])
-        rows = [dict(row) for row in reader]
-    return fieldnames, rows
+    return read_csv_dicts(path)
 
 
 def write_csv_rows(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> None:
@@ -150,14 +147,7 @@ def write_csv_rows(path: Path, fieldnames: list[str], rows: list[dict[str, str]]
 
 def backup_csv(path: Path) -> Path:
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    try:
-        rel = path.relative_to(AUTO_KEYS_DIR)
-    except ValueError:
-        rel = Path(path.name)
-    backup_path = BACKUP_ROOT / timestamp / rel
-    backup_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(path, backup_path)
-    return backup_path
+    return copy_csv_backup(path, BACKUP_ROOT / timestamp, AUTO_KEYS_DIR)
 
 
 def csv_cell_literal(value: str) -> str:
