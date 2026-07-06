@@ -6,6 +6,7 @@
 - 경로:   resolve_pack_path / pack_path / workshop_root / translation_keys_root
 - 텍스트: read_text (BOM·이상 바이트를 견디며 읽기)
 - 모드:   descriptor_name (descriptor.mod의 name="..." 값)
+- 이름:   slugify (모드 이름 → ASCII 폴더 슬러그, 연속 `_` 축약)
 - CSV:    open_csv_write + csv_writer / csv_dict_writer (LF + QUOTE_MINIMAL 강제)
 """
 
@@ -127,6 +128,18 @@ def is_integrated_mode(cli_flag: bool) -> bool:
     return raw == "integrated"
 
 
+def slugify(value: str) -> str:
+    """Create an ASCII folder-safe slug for generated key directories.
+
+    The workshop id is appended later, so collisions between similar names are
+    still avoided even though this strips punctuation and non-ASCII text.
+    """
+    value = value.lower()
+    value = re.sub(r"[^a-z0-9]+", "_", value)
+    value = re.sub(r"_+", "_", value).strip("_")
+    return value or "mod"
+
+
 def output_root(mod_id: str, mod_name: str, integrated: bool) -> Path:
     """Return the localisation/korean output root for a mod.
 
@@ -135,8 +148,7 @@ def output_root(mod_id: str, mod_name: str, integrated: bool) -> Path:
     """
     if integrated:
         return PACK_ROOT.parent / "integrated_korean_translation_pack" / "localisation" / "korean"
-    slug = "".join(c if c.isalnum() else "_" for c in mod_name.lower()).strip("_")
-    folder_name = f"{slug}__{mod_id}_korean"
+    folder_name = f"{slugify(mod_name)}__{mod_id}_korean"
     return PACK_ROOT.parent / folder_name / "localisation" / "korean"
 
 
@@ -176,8 +188,7 @@ def ensure_standalone_mod(mod_id: str, mod_name: str) -> Path:
     Returns the mod root (parent of localisation/).
     Skips descriptor.mod creation if it already exists.
     """
-    slug = "".join(c if c.isalnum() else "_" for c in mod_name.lower()).strip("_")
-    folder_name = f"{slug}__{mod_id}_korean"
+    folder_name = f"{slugify(mod_name)}__{mod_id}_korean"
     mod_root = PACK_ROOT.parent / folder_name
     descriptor = mod_root / "descriptor.mod"
     if not descriptor.is_file():

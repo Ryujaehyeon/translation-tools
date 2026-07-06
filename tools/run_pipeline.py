@@ -24,14 +24,13 @@ import argparse
 import concurrent.futures
 import json
 import os
-import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
+from csv_io import write_json
 from tool_config import (
-    descriptor_name,
     ensure_standalone_mod,
     is_integrated_mode,
     output_root,
@@ -42,8 +41,14 @@ from tool_config import (
 from tool_config import (
     workshop_root as configured_workshop_root,
 )
+from workshop_scan import (
+    classification_counts,
+    classify_mods,
+    detect_workshop_root,
+    filter_classified_mods,
+    target_mods_from_classification,
+)
 
-STELLARIS_APP_ID = "281990"
 # 캐시 포맷이 바뀌면 이 값을 올린다 (캐시 자동 무효화).
 # 올려야 하는 경우: mod state JSON 구조 변경, slug 생성 방식 변경,
 #   extraction 결과 포맷 변경 등 기존 캐시가 잘못된 skip 판단을 낼 수 있을 때.
@@ -214,183 +219,6 @@ def apply_mode_preset(args: argparse.Namespace) -> None:
         args.quiet = True
     # report is the historical default: extract, translation dry-run,
     # validation, and conflict worklist preparation.
-
-
-
-def parse_vdf_paths(path: Path) -> list[Path]:
-    """Extract Steam library paths from a simple Valve VDF file.
-
-    This intentionally uses a narrow regex instead of a full VDF parser because
-    we only need repeated `"path" "..."` entries from libraryfolders.vdf.
-    """
-    if not path.is_file():
-        return []
-    paths: list[Path] = []
-    for match in re.finditer(r'"path"\s+"([^"]+)"', read_text(path)):
-        paths.append(Path(match.group(1).replace("\\\\", "\\")))
-    return paths
-
-
-def steam_root_candidates() -> list[Path]:
-    """Return likely Steam install roots before reading libraryfolders.vdf."""
-    candidates: list[Path] = []
-    env_steam = os.environ.get("STEAM_DIR")
-    if env_steam:
-        candidates.append(Path(env_steam))
-    for raw in (
-        r"C:\Program Files (x86)\Steam",
-        r"C:\Program Files\Steam",
-        r"D:\Program Files (x86)\Steam",
-        r"D:\Steam",
-    ):
-        candidates.append(Path(raw))
-    return list(dict.fromkeys(candidates))
-
-
-def discover_steam_libraries() -> list[Path]:
-    """Find Steam libraries from common roots and libraryfolders.vdf files."""
-    libraries: list[Path] = []
-    for steam_root in steam_root_candidates():
-        if not steam_root.is_dir():
-            continue
-        libraries.append(steam_root)
-        libraries.extend(parse_vdf_paths(steam_root / "steamapps" / "libraryfolders.vdf"))
-    return list(dict.fromkeys(libraries))
-
-
-def detect_workshop_root() -> Path:
-    """Locate the Stellaris workshop content directory from Steam libraries."""
-    candidates: list[Path] = []
-    for library in discover_steam_libraries():
-        candidates.append(library / "steamapps" / "workshop" / "content" / STELLARIS_APP_ID)
-        appworkshop = library / "steamapps" / "workshop" / f"appworkshop_{STELLARIS_APP_ID}.acf"
-        if appworkshop.is_file():
-            candidates.append(library / "steamapps" / "workshop" / "content" / STELLARIS_APP_ID)
-
-    for candidate in candidates:
-        if candidate.is_dir():
-            return candidate
-    raise SystemExit(
-        "Could not find Stellaris workshop content folder. "
-        'Pass --workshop-root explicitly, for example --workshop-root "D:\\Steam\\steamapps\\workshop\\content\\281990".'
-    )
-
-
-
-
-def slugify(value: str) -> str:
-    """Create an ASCII folder-safe slug for generated key directories.
-
-    The workshop id is appended later, so collisions between similar names are
-    still avoided even though this strips punctuation and non-ASCII text.
-    """
-    value = value.lower()
-    value = re.sub(r"[^a-z0-9]+", "_", value)
-    value = re.sub(r"_+", "_", value).strip("_")
-    return value or "mod"
-
-
-def classify_mod_root(mod_root: Path) -> dict[str, object]:
-    """Classify one workshop folder for reporting and target selection."""
-    mod_id = mod_root.name
-    name = descriptor_name(mod_root) if mod_root.is_dir() else mod_id
-    localisation_root = mod_root / "localisation"
-    english_root = localisation_root / "english"
-    direct_english_files = (
-        sorted(localisation_root.glob("*_l_english.yml")) if localisation_root.is_dir() else []
-    )
-    replace_root = localisation_root / "replace"
-    replace_english_files = (
-        sorted(replace_root.rglob("*_l_english.yml")) if replace_root.is_dir() else []
-    )
-    korean_root = localisation_root / "korean"
-    localisation_dirs = []
-    if localisation_root.is_dir():
-        localisation_dirs = sorted(
-            path.name for path in localisation_root.iterdir() if path.is_dir()
-        )
-
-    if not mod_root.is_dir():
-        category = "missing_mod_folder"
-    elif english_root.is_dir():
-        category = "english"
-    elif direct_english_files:
-        category = "english_direct"
-    elif replace_english_files:
-        category = "replace_english"
-    elif not localisation_root.exists():
-        category = "no_localisation"
-    elif korean_root.is_dir() and len(localisation_dirs) == 1:
-        category = "korean_only"
-    elif replace_root.is_dir() and len(localisation_dirs) == 1:
-        category = "replace_only"
-    else:
-        category = "localisation_without_english"
-
-    return {
-        "mod_id": mod_id,
-        "name": name,
-        "slug": f"{slugify(name)}__{mod_id}",
-        "root": str(mod_root),
-        "category": category,
-        "localisation_dirs": localisation_dirs,
-        "is_target": category in {"english", "english_direct", "replace_english"},
-    }
-
-
-def classify_mods(workshop_root: Path, mod_ids: list[str] | None) -> list[dict[str, object]]:
-    """Classify all requested/installed workshop mods.
-
-    Categories `english`, `english_direct`, and `replace_english` are
-    processed. `replace_english` is the layout where English files live under
-    `localisation/replace`.
-    """
-    if mod_ids:
-        candidates = [workshop_root / mod_id for mod_id in mod_ids]
-    else:
-        candidates = sorted(path for path in workshop_root.iterdir() if path.is_dir())
-    return [classify_mod_root(path) for path in candidates]
-
-
-def filter_classified_mods(
-    classified: list[dict[str, object]],
-    mod_filters: list[str],
-) -> list[dict[str, object]]:
-    """Limit classified mods by generated slug or workshop id."""
-    if not mod_filters:
-        return classified
-    wanted = set(mod_filters)
-    return [
-        item
-        for item in classified
-        if str(item.get("slug", "")) in wanted or str(item.get("mod_id", "")) in wanted
-    ]
-
-
-def target_mods_from_classification(
-    classified: list[dict[str, object]], limit: int
-) -> list[dict[str, str]]:
-    """Return processable mods from classification records."""
-    targets: list[dict[str, str]] = [
-        {
-            "mod_id": str(item["mod_id"]),
-            "name": str(item["name"]),
-            "slug": str(item["slug"]),
-            "root": str(item["root"]),
-        }
-        for item in classified
-        if item.get("is_target")
-    ]
-    return targets[:limit] if limit else targets
-
-
-def classification_counts(classified: list[dict[str, object]]) -> dict[str, int]:
-    """Count classification categories for summaries."""
-    counts: dict[str, int] = {}
-    for item in classified:
-        category = str(item["category"])
-        counts[category] = counts.get(category, 0) + 1
-    return dict(sorted(counts.items()))
 
 
 def print_mod_table(workshop_root: Path, mods: list[dict[str, str]]) -> None:
@@ -695,7 +523,7 @@ def write_report_index(current_report: Path, run_summary: dict[str, object]) -> 
     index_json = reports_root / "index.json"
     index_md = reports_root / "index.md"
     reports_root.mkdir(parents=True, exist_ok=True)
-    index_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8-sig")
+    write_json(index_json, payload)
 
     lines = [
         "# Maintenance Report Index",
@@ -1459,7 +1287,7 @@ def main() -> int:
         save_cache(cache)
 
     report_path = reports_root / f"run_pipeline_report_{timestamp}.json"
-    report_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8-sig")
+    write_json(report_path, summary)
     index_json, index_md = write_report_index(report_path, summary)
 
     print(f"mods={len(mods)}")

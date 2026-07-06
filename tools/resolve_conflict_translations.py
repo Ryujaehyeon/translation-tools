@@ -24,6 +24,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from csv_io import write_json
 from tool_config import csv_dict_writer, read_text, resolve_pack_path
 
 DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
@@ -199,12 +200,6 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
-
-
-def write_json(path: Path, payload: dict) -> None:
-    """Write a JSON report for prepare/apply mode."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8-sig")
 
 
 def prepare(

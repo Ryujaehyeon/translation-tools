@@ -17,9 +17,10 @@ from pathlib import Path
 
 from csv_io import write_json
 from tool_config import csv_writer, descriptor_name, read_text, resolve_pack_path
+from tool_config import workshop_root as _configured_workshop_root
 from yml_localisation import HEADER_RE, parse_entry
 
-DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
+DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 PACK_ROOT = Path(__file__).resolve().parents[1]
 
 
