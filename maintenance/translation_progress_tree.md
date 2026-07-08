@@ -1,6 +1,6 @@
 # 자동키 번역률 트리
 
-최종 갱신: 2026-07-06 20:25
+최종 갱신: 2026-07-08 22:12
 
 이 문서는 `maintenance/translation_keys`의 CSV를 스캔해 모드/파일/번역률 순서로 정리한 진행률 표이다.
 번역률은 error 판정(empty/token_broken/no_hangul/quote_noise) 제외 기준이다. warning(identical/too_short)은 진행률에 영향 없음.
@@ -29,7 +29,7 @@
 | └─ `extsynths_key.csv` | 100.0% | 303 / 0 / 303 | 1 | 완료 |
 | `archaeology_story_pack_4_3__3723865830` | 100.0% | 520 / 0 / 520 | 11 | 완료 |
 | └─ `aspmod_key.csv` | 100.0% | 520 / 0 / 520 | 11 | 완료 |
-| `arkanna_mirra_the_white_empress_zera_zafe_leader__3756044659` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
+| `arkanna_mirra_the_white_empress_origin_ruler__3756044659` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
 | └─ `arkanna_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
 | `dynamic_mod_menu_3_10__2458024521` | 100.0% | 465 / 0 / 465 | 14 | 완료 |
 | └─ `dmm_key.csv` | 100.0% | 465 / 0 / 465 | 14 | 완료 |
