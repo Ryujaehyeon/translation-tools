@@ -17,11 +17,19 @@ from __future__ import annotations
 
 import argparse
 import csv
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 from csv_io import write_json
+from loc_tree import (
+    collect_rendered_values,
+    conflicts_from_values,
+    csv_path_for,
+    discover_english_sources,
+    render_entry,
+    source_path_for,
+    target_path_for,
+)
 from tool_config import (
     PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
 )
@@ -69,34 +77,6 @@ def parse_args() -> argparse.Namespace:
 
 
 
-def discover_english_sources(mod_root: Path) -> list[tuple[Path, Path, Path]]:
-    """Return source files with their root and CSV path prefix."""
-    localisation_root = mod_root / "localisation"
-    candidates: list[tuple[Path, Path, bool]] = [
-        (localisation_root / "english", Path(), True),
-        (localisation_root, Path(), False),
-        (localisation_root / "replace" / "english", Path("replace"), True),
-        (localisation_root / "replace", Path("replace"), False),
-    ]
-    sources: list[tuple[Path, Path, Path]] = []
-    seen: set[Path] = set()
-    for source_root, csv_prefix, recursive in candidates:
-        if not source_root.is_dir():
-            continue
-        files = sorted(
-            source_root.rglob("*_l_english.yml")
-            if recursive
-            else source_root.glob("*_l_english.yml")
-        )
-        for source_file in files:
-            resolved = source_file.resolve()
-            if resolved in seen:
-                continue
-            seen.add(resolved)
-            sources.append((source_file, source_root, csv_prefix))
-    return sources
-
-
 def parse_localisation_file(path: Path) -> tuple[dict[str, str], list[dict[str, object]], int]:
     """Parse one localisation file and collect format issues.
 
@@ -120,12 +100,7 @@ def parse_localisation_file(path: Path) -> tuple[dict[str, str], list[dict[str, 
         entry = parse_entry(line)
         if entry is not None:
             key = entry.key.strip()
-            version = entry.version
-            value = entry.value
-            if version is None:
-                entries[key] = f" {key}: {value}".rstrip()
-            else:
-                entries[key] = f" {key}:{version} {value}".rstrip()
+            entries[key] = render_entry(key, entry.version, entry.value)
             continue
 
         issues.append(
@@ -185,76 +160,6 @@ def read_keys(csv_path: Path) -> tuple[list[str], list[dict[str, object]]]:
     return keys, issues
 
 
-def csv_path_for(
-    source_file: Path, source_root: Path, csv_root: Path, csv_prefix: Path = Path()
-) -> Path:
-    """Map a source English yml file to its expected key CSV path."""
-    relative = source_file.relative_to(source_root)
-    name = relative.name
-    if name.endswith("_l_english.yml"):
-        name = name[: -len("_l_english.yml")] + "_key.csv"
-    else:
-        name = relative.stem + "_key.csv"
-    return csv_root / csv_prefix / relative.parent / name
-
-
-def source_path_for(csv_path: Path, csv_root: Path, mod_root: Path) -> Path:
-    """Map a key CSV path back to its source English yml file."""
-    relative = csv_path.relative_to(csv_root)
-    name = relative.name
-    source_name = (
-        name[: -len("_key.csv")] + "_l_english.yml"
-        if name.endswith("_key.csv")
-        else relative.stem + "_l_english.yml"
-    )
-    localisation_root = mod_root / "localisation"
-    if relative.parts and relative.parts[0] == "replace":
-        rest = Path(*relative.parts[1:]).parent / source_name
-        candidates = [
-            localisation_root / "replace" / rest,
-            localisation_root / "replace" / "english" / rest,
-        ]
-    else:
-        rest = relative.parent / source_name
-        candidates = [
-            localisation_root / "english" / rest,
-            localisation_root / rest,
-        ]
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    return candidates[0]
-
-
-def target_path_for(csv_path: Path, csv_root: Path, korean_root: Path) -> Path:
-    """Map a key CSV path to its generated Korean yml file."""
-    relative = csv_path.relative_to(csv_root)
-    name = relative.name
-    if not name.endswith("_key.csv"):
-        return korean_root / relative.parent / (relative.stem + "_l_korean.yml")
-    return korean_root / relative.parent / (name[: -len("_key.csv")] + "_l_korean.yml")
-
-
-def build_korean_value_index(korean_root: Path) -> dict[str, list[dict[str, object]]]:
-    """Find keys with multiple distinct rendered Korean values and sources."""
-    values_by_key: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
-    for path in sorted(korean_root.rglob("*_l_korean.yml")):
-        entries, _, _ = parse_localisation_file(path)
-        rel_path = str(path.relative_to(korean_root))
-        for key, rendered in entries.items():
-            values_by_key[key][rendered].add(rel_path)
-
-    conflicts: dict[str, list[dict[str, object]]] = {}
-    for key, values in values_by_key.items():
-        if len(values) <= 1:
-            continue
-        conflicts[key] = [
-            {"value": value, "sources": sorted(sources)}
-            for value, sources in sorted(values.items())
-        ]
-    return conflicts
-
-
 def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, object]]) -> None:
     """Write a UTF-8 BOM CSV worklist."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -307,7 +212,7 @@ def main() -> int:
         str(path.relative_to(csv_root)) for path in actual_csv_paths - expected_csv_paths
     )
 
-    global_conflicts = build_korean_value_index(korean_root)
+    global_conflicts = conflicts_from_values(collect_rendered_values(korean_root))
 
     for csv_path in csv_files:
         source_path = source_path_for(csv_path, csv_root, mod_root)

@@ -30,6 +30,7 @@ from datetime import datetime
 from pathlib import Path
 
 from csv_io import write_json
+from loc_tree import csv_path_for, discover_english_sources
 from tool_config import csv_writer, english_source_root, read_text, resolve_pack_path
 from tool_config import workshop_root as _configured_workshop_root
 from yml_localisation import HEADER_RE, parse_entry
@@ -120,47 +121,6 @@ def iter_localisation_entries(path: Path) -> list[tuple[str, str]]:
             entries.append((key, english_value))
             seen.add(key)
     return entries
-
-
-def output_path_for(
-    source_file: Path, source_root: Path, output_root: Path, output_prefix: Path = Path()
-) -> Path:
-    """Map an English source yml path to the matching *_key.csv path."""
-    relative = source_file.relative_to(source_root)
-    stem = relative.name
-    if stem.endswith("_l_english.yml"):
-        stem = stem[: -len("_l_english.yml")] + "_key.csv"
-    else:
-        stem = relative.stem + "_key.csv"
-    return output_root / output_prefix / relative.parent / stem
-
-
-def discover_english_sources(mod_root: Path) -> list[tuple[Path, Path, Path]]:
-    """Return source files with their root and CSV path prefix."""
-    localisation_root = mod_root / "localisation"
-    candidates: list[tuple[Path, Path, bool]] = [
-        (localisation_root / "english", Path(), True),
-        (localisation_root, Path(), False),
-        (localisation_root / "replace" / "english", Path("replace"), True),
-        (localisation_root / "replace", Path("replace"), False),
-    ]
-    sources: list[tuple[Path, Path, Path]] = []
-    seen: set[Path] = set()
-    for source_root, output_prefix, recursive in candidates:
-        if not source_root.is_dir():
-            continue
-        files = sorted(
-            source_root.rglob("*_l_english.yml")
-            if recursive
-            else source_root.glob("*_l_english.yml")
-        )
-        for source_file in files:
-            resolved = source_file.resolve()
-            if resolved in seen:
-                continue
-            seen.add(resolved)
-            sources.append((source_file, source_root, output_prefix))
-    return sources
 
 
 def read_existing_rows(csv_path: Path) -> list[dict[str, str]]:
@@ -264,7 +224,7 @@ def main() -> int:
 
     for source_file, file_source_root, output_prefix in source_files:
         entries = iter_localisation_entries(source_file)
-        csv_path = output_path_for(source_file, file_source_root, output_root, output_prefix)
+        csv_path = csv_path_for(source_file, file_source_root, output_root, output_prefix)
         existing_rows = read_existing_rows(csv_path)
         preserve_korean = not args.no_preserve_korean
         new_keys = {key for key, _ in entries}

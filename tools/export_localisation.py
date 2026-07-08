@@ -20,11 +20,17 @@ import argparse
 import csv
 import re
 import shutil
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 from csv_io import write_json
+from loc_tree import (
+    build_translation_index,
+    parse_rendered_entries,
+    source_path_for,
+    target_path_for,
+    write_text,
+)
 from tool_config import (
     PACK_ROOT as _TOOL_CONFIG_PACK_ROOT,
 )
@@ -35,7 +41,7 @@ from tool_config import (
 from tool_config import (
     workshop_root as _configured_workshop_root,
 )
-from yml_localisation import HEADER_RE, parse_entry
+from yml_localisation import parse_entry
 
 DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 TOOL_ROOT = Path(__file__).resolve().parents[1]
@@ -76,68 +82,6 @@ def parse_args() -> argparse.Namespace:
 
 
 
-def write_text(path: Path, text: str) -> None:
-    """Write generated localisation text with a BOM and LF newlines."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8-sig", newline="\n")
-
-
-def parse_entries(path: Path) -> dict[str, str]:
-    """Parse a localisation file into key -> rendered line.
-
-    The rendered line preserves the key's version style (`:0` or bare `:`) so
-    output stays close to the source or existing Korean file.
-    """
-    entries: dict[str, str] = {}
-    for line in read_text(path).splitlines():
-        if HEADER_RE.match(line):
-            continue
-        entry = parse_entry(line)
-        if entry is None:
-            continue
-        key = entry.key.strip()
-        version = entry.version
-        value = entry.value
-        if version is None:
-            entries[key] = f" {key}: {value}".rstrip()
-        else:
-            entries[key] = f" {key}:{version} {value}".rstrip()
-    return entries
-
-
-def build_translation_index(
-    korean_root: Path,
-) -> tuple[dict[str, str], dict[str, list[dict[str, object]]]]:
-    """Scan all Korean files and split unique translations from conflicts.
-
-    A key with exactly one distinct rendered value is safe to reuse. A key with
-    multiple distinct rendered values is reported as a conflict and will fall
-    back to the English source unless the CSV provides an explicit korean_value.
-    """
-    values_by_key: dict[str, set[str]] = defaultdict(set)
-    sources_by_key_value: dict[tuple[str, str], list[str]] = defaultdict(list)
-
-    for path in sorted(korean_root.rglob("*_l_korean.yml")):
-        for key, rendered in parse_entries(path).items():
-            values_by_key[key].add(rendered)
-            sources_by_key_value[(key, rendered)].append(str(path.relative_to(korean_root)))
-
-    translations: dict[str, str] = {}
-    conflicts: dict[str, list[dict[str, object]]] = {}
-    for key, values in values_by_key.items():
-        if len(values) == 1:
-            translations[key] = next(iter(values))
-        elif len(values) > 1:
-            conflicts[key] = [
-                {
-                    "value": value,
-                    "sources": sorted(sources_by_key_value[(key, value)]),
-                }
-                for value in sorted(values)
-            ]
-    return translations, conflicts
-
-
 def read_keys(csv_path: Path) -> dict[str, str]:
     """Return ordered dict of key -> korean_value (empty string if not filled)."""
     with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
@@ -157,42 +101,6 @@ def read_keys(csv_path: Path) -> dict[str, str]:
         return result
 
 
-def target_path_for(csv_path: Path, csv_root: Path, korean_root: Path) -> Path:
-    """Map a *_key.csv path to its target *_l_korean.yml path."""
-    relative = csv_path.relative_to(csv_root)
-    name = relative.name
-    if not name.endswith("_key.csv"):
-        raise ValueError(f"CSV file name must end with _key.csv: {csv_path}")
-    target_name = name[: -len("_key.csv")] + "_l_korean.yml"
-    return korean_root / relative.parent / target_name
-
-
-def source_path_for(csv_path: Path, csv_root: Path, mod_root: Path) -> Path:
-    """Map a *_key.csv path back to its source *_l_english.yml path."""
-    relative = csv_path.relative_to(csv_root)
-    name = relative.name
-    if not name.endswith("_key.csv"):
-        raise ValueError(f"CSV file name must end with _key.csv: {csv_path}")
-    source_name = name[: -len("_key.csv")] + "_l_english.yml"
-    localisation_root = mod_root / "localisation"
-    if relative.parts and relative.parts[0] == "replace":
-        rest = Path(*relative.parts[1:]).parent / source_name
-        candidates = [
-            localisation_root / "replace" / rest,
-            localisation_root / "replace" / "english" / rest,
-        ]
-    else:
-        rest = relative.parent / source_name
-        candidates = [
-            localisation_root / "english" / rest,
-            localisation_root / rest,
-        ]
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    return candidates[0]
-
-
 def render_from_csv_value(key: str, raw: str) -> str:
     """Convert a user-supplied korean_value into a localisation line.
 
@@ -201,8 +109,8 @@ def render_from_csv_value(key: str, raw: str) -> str:
     """
     stripped = raw.strip()
     # Full line already supplied (contains key name before colon)
-    match = re.match(r"^(\s*)([^:#\s][^:]*)\s*:\s*(?:-?\d+\s*)?(.*)$", stripped)
-    if match and match.group(2).strip() == key:
+    entry = parse_entry(stripped)
+    if entry is not None and entry.key.strip() == key:
         return stripped
     # Bare value — wrap with quotes if needed
     if not (stripped.startswith('"') and stripped.endswith('"')):
@@ -328,7 +236,7 @@ def main() -> int:
             continue
 
         keys = read_keys(csv_path)
-        source_entries = parse_entries(source_path)
+        source_entries = parse_rendered_entries(source_path)
         rendered, missing, conflicted, fallback = render_file(
             keys,
             translations,

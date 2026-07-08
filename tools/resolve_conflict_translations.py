@@ -18,20 +18,27 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import re
 import shutil
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 from csv_io import write_json
+from loc_tree import (
+    collect_rendered_values,
+    conflicts_from_values,
+    render_entry,
+    source_path_for,
+    target_path_for,
+    write_text,
+)
 from tool_config import csv_dict_writer, read_text, resolve_pack_path
+from tool_config import workshop_root as _configured_workshop_root
+from yml_localisation import HEADER_RE, parse_entry
 
-DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
+DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = Path(__file__).resolve().parents[2] / "integrated_korean_translation_pack"
-ENTRY_RE = re.compile(r"^(\s*)([^:#\s][^:]*)\s*:\s*(?:(-?\d+)\s*)?(.*)$")
-HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 CSV_FIELDS = [
     "target_file",
     "key",
@@ -74,40 +81,14 @@ def parse_args() -> argparse.Namespace:
 
 
 
-def write_text(path: Path, text: str) -> None:
-    """Write patched localisation text with BOM and LF newlines."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8-sig", newline="\n")
-
-
-
-
-def english_source_root(mod_root: Path) -> Path:
-    """Return the English localisation root for both Stellaris mod layouts."""
-    localisation_root = mod_root / "localisation"
-    nested_root = localisation_root / "english"
-    if nested_root.is_dir():
-        return nested_root
-    if localisation_root.is_dir() and any(localisation_root.glob("*_l_english.yml")):
-        return localisation_root
-    return nested_root
-
-
 def parse_entry_line(line: str) -> tuple[str, str | None, str] | None:
     """Parse one localisation line into key/version/value, ignoring headers."""
     if HEADER_RE.match(line):
         return None
-    match = ENTRY_RE.match(line)
-    if not match:
+    entry = parse_entry(line)
+    if entry is None:
         return None
-    return match.group(2).strip(), match.group(3), match.group(4)
-
-
-def render_entry(key: str, version: str | None, value: str) -> str:
-    """Render a localisation line while preserving :0 vs bare-colon style."""
-    if version is None:
-        return f" {key}: {value}".rstrip()
-    return f" {key}:{version} {value}".rstrip()
+    return entry.key.strip(), entry.version, entry.value
 
 
 def parse_entries(path: Path) -> dict[str, tuple[str | None, str, str]]:
@@ -138,60 +119,6 @@ def read_keys(csv_path: Path) -> list[str]:
         return keys
 
 
-def target_path_for(csv_path: Path, csv_root: Path, korean_root: Path) -> Path:
-    """Map a key CSV path to its target Korean yml file."""
-    relative = csv_path.relative_to(csv_root)
-    name = relative.name
-    if not name.endswith("_key.csv"):
-        raise ValueError(f"CSV file name must end with _key.csv: {csv_path}")
-    return korean_root / relative.parent / (name[: -len("_key.csv")] + "_l_korean.yml")
-
-
-def source_path_for(csv_path: Path, csv_root: Path, mod_root: Path) -> Path:
-    """Map a key CSV path back to its source English yml file."""
-    relative = csv_path.relative_to(csv_root)
-    name = relative.name
-    if not name.endswith("_key.csv"):
-        raise ValueError(f"CSV file name must end with _key.csv: {csv_path}")
-    source_name = name[: -len("_key.csv")] + "_l_english.yml"
-    localisation_root = mod_root / "localisation"
-    if relative.parts and relative.parts[0] == "replace":
-        rest = Path(*relative.parts[1:]).parent / source_name
-        candidates = [
-            localisation_root / "replace" / rest,
-            localisation_root / "replace" / "english" / rest,
-        ]
-    else:
-        rest = relative.parent / source_name
-        candidates = [
-            localisation_root / "english" / rest,
-            localisation_root / rest,
-        ]
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    return candidates[0]
-
-
-def build_korean_conflicts(korean_root: Path) -> dict[str, list[dict[str, object]]]:
-    """Collect only keys that have multiple distinct Korean rendered values."""
-    values_by_key: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
-    for path in sorted(korean_root.rglob("*_l_korean.yml")):
-        rel_path = str(path.relative_to(korean_root))
-        for key, (_, _, rendered) in parse_entries(path).items():
-            values_by_key[key][rendered].add(rel_path)
-
-    conflicts: dict[str, list[dict[str, object]]] = {}
-    for key, values in values_by_key.items():
-        if len(values) <= 1:
-            continue
-        conflicts[key] = [
-            {"value": value, "sources": sorted(sources)}
-            for value, sources in sorted(values.items())
-        ]
-    return conflicts
-
-
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     """Write the conflict-resolution work CSV."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -211,7 +138,7 @@ def prepare(
     report_root: Path,
 ) -> int:
     """Create the manual conflict-resolution CSV without editing yml files."""
-    conflicts = build_korean_conflicts(korean_root)
+    conflicts = conflicts_from_values(collect_rendered_values(korean_root))
     rows: list[dict[str, object]] = []
 
     for csv_path in sorted(csv_root.rglob("*_key.csv")):

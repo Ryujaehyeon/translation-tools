@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 from tool_config import csv_dict_writer
+from yml_localisation import HEADER_RE, parse_entry
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PACK_ROOT = SCRIPT_DIR.parent
@@ -30,8 +31,6 @@ DEFAULT_OFFICIAL_ENGLISH = Path(
 )
 DEFAULT_OUTPUT = PACK_ROOT / "maintenance" / "term_glossary.csv"
 
-ENTRY_RE = re.compile(r"^\s*([^:#\s][^:]*?)\s*:\s*(?:-?\d+\s*)?(.*)$")
-HEADER_RE = re.compile(r"^\s*l_[A-Za-z_]+:\s*$")
 # 토큰 포함 여부 검사
 TOKEN_RE = re.compile(r"\$[^$]+\$|£[^£]+£|\[[^\]]+\]|§.")
 # 따옴표 벗기기
@@ -57,11 +56,11 @@ def parse_yml(path: Path) -> dict[str, str]:
     for line in text.splitlines():
         if HEADER_RE.match(line):
             continue
-        m = ENTRY_RE.match(line)
-        if not m:
+        entry = parse_entry(line)
+        if entry is None:
             continue
-        key = m.group(1).strip()
-        raw = m.group(2).strip()
+        key = entry.key.strip()
+        raw = entry.value.strip()
         qm = QUOTE_RE.match(raw)
         value = qm.group(1) if qm else raw
         if key:
