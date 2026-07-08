@@ -32,11 +32,12 @@ from tool_config import (
     resolve_pack_path,
     translation_keys_root,
 )
+from tool_config import workshop_root as _configured_workshop_root
 from yml_localisation import HEADER_RE, parse_entry
 
 PACK_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUTO_KEYS_DIR = translation_keys_root()
-DEFAULT_WORKSHOP_ROOT = Path(r"D:\Program Files (x86)\Steam\steamapps\workshop\content\281990")
+DEFAULT_WORKSHOP_ROOT = _configured_workshop_root()
 DEFAULT_REPORT_DIR = PACK_ROOT / "maintenance" / "reports" / "reference_import"
 BACKUP_ROOT = PACK_ROOT / "maintenance" / "backups" / "import_korean_references"
 
