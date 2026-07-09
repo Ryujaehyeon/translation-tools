@@ -1,6 +1,6 @@
 # 자동키 번역률 트리
 
-최종 갱신: 2026-07-08 22:12
+최종 갱신: 2026-07-09 22:31
 
 이 문서는 `maintenance/translation_keys`의 CSV를 스캔해 모드/파일/번역률 순서로 정리한 진행률 표이다.
 번역률은 error 판정(empty/token_broken/no_hangul/quote_noise) 제외 기준이다. warning(identical/too_short)은 진행률에 영향 없음.
@@ -9,13 +9,13 @@
 
 | 항목 | 수량 |
 | --- | ---: |
-| 모드 폴더 | 51 |
-| CSV 파일 | 385 |
-| 번역 완료 행 | 104,220 |
+| 모드 폴더 | 49 |
+| CSV 파일 | 382 |
+| 번역 완료 행 | 103,834 |
 | 의심 번역 행 | 2,324 |
-| 번역 대상 행 | 106,544 |
+| 번역 대상 행 | 106,158 |
 | 전체 번역률 | 97.8% |
-| 원문 빈 값 행 | 864 |
+| 원문 빈 값 행 | 857 |
 
 ## 모드/파일/번역률 트리
 
@@ -383,11 +383,6 @@
 | └─ `nsc_technologies_key.csv` | 100.0% | 201 / 0 / 201 | 26 | 완료 |
 | └─ `nsc_tooltips_key.csv` | 100.0% | 36 / 0 / 36 | 0 | 완료 |
 | └─ `replace/nsc_replacements_key.csv` | 100.0% | 15 / 0 / 15 | 0 | 완료 |
-| `otter_editor__1595999824` | 100.0% | 383 / 0 / 383 | 7 | 완료 |
-| └─ `ottereditor_key.csv` | 100.0% | 275 / 0 / 275 | 7 | 완료 |
-| └─ `otterleader_key.csv` | 100.0% | 108 / 0 / 108 | 0 | 완료 |
-| `otter_editor_s_dynamic_mod_menu_add_on__2460698354` | 100.0% | 3 / 0 / 3 | 0 | 완료 |
-| └─ `otterdmm_key.csv` | 100.0% | 3 / 0 / 3 | 0 | 완료 |
 | `planetary_diversity__819148835` | 100.0% | 1,856 / 0 / 1,856 | 0 | 완료 |
 | └─ `planetarydiversity_ascension_worlds_key.csv` | 100.0% | 116 / 0 / 116 | 0 | 완료 |
 | └─ `planetarydiversity_domed_colonies_key.csv` | 100.0% | 211 / 0 / 211 | 0 | 완료 |
