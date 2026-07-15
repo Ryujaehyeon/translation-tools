@@ -1,6 +1,6 @@
 # 자동키 번역률 트리
 
-최종 갱신: 2026-07-10 00:49
+최종 갱신: 2026-07-15 17:00
 
 이 문서는 `maintenance/translation_keys`의 CSV를 스캔해 모드/파일/번역률 순서로 정리한 진행률 표이다.
 번역률은 error 판정(empty/token_broken/no_hangul/quote_noise) 제외 기준이다. warning(identical/too_short)은 진행률에 영향 없음.
@@ -11,10 +11,10 @@
 | --- | ---: |
 | 모드 폴더 | 49 |
 | CSV 파일 | 386 |
-| 번역 완료 행 | 104,955 |
-| 의심 번역 행 | 3,904 |
+| 번역 완료 행 | 106,439 |
+| 의심 번역 행 | 2,420 |
 | 번역 대상 행 | 108,859 |
-| 전체 번역률 | 96.4% |
+| 전체 번역률 | 97.8% |
 | 원문 빈 값 행 | 866 |
 
 ## 모드/파일/번역률 트리
@@ -63,12 +63,12 @@
 | └─ `esap_misc_key.csv` | 96.7% | 202 / 7 / 209 | 0 | 진행 중 (의심 7) |
 | └─ `esap_key.csv` | 98.5% | 202 / 3 / 205 | 2 | 진행 중 (의심 3) |
 | └─ `esap_modifiers_key.csv` | 99.4% | 156 / 1 / 157 | 0 | 진행 중 (의심 1) |
-| `expanded_stellaris_traditions__946222466` | 29.8% | 762 / 1,792 / 2,554 | 11 | 진행 중 (의심 1,792) |
+| `expanded_stellaris_traditions__946222466` | 29.9% | 763 / 1,791 / 2,554 | 11 | 진행 중 (의심 1,791) |
 | └─ `est_archivist_adopt_key.csv` | 0.0% | 0 / 55 / 55 | 0 | 미시작 |
 | └─ `replace/est_replacements_key.csv` | 0.0% | 0 / 27 / 27 | 0 | 미시작 |
 | └─ `est_academy_traits_key.csv` | 1.1% | 2 / 185 / 187 | 0 | 진행 중 (의심 185) |
 | └─ `est_traditions_key.csv` | 7.8% | 75 / 883 / 958 | 1 | 진행 중 (의심 883) |
-| └─ `est_misc_key.csv` | 28.0% | 191 / 490 / 681 | 10 | 진행 중 (의심 490) |
+| └─ `est_misc_key.csv` | 28.2% | 192 / 489 / 681 | 10 | 진행 중 (의심 489) |
 | └─ `est_concepts_key.csv` | 31.8% | 7 / 15 / 22 | 0 | 진행 중 (의심 15) |
 | └─ `est_modifiers_key.csv` | 67.7% | 287 / 137 / 424 | 0 | 진행 중 (의심 137) |
 | └─ `est_archivist_5_key.csv` | 100.0% | 200 / 0 / 200 | 0 | 완료 |
@@ -156,8 +156,8 @@
 | └─ `random_names/giga_birch_natives_names_key.csv` | 100.0% | 12 / 0 / 12 | 0 | 완료 |
 | └─ `replace/from_modifiers_key.csv` | 100.0% | 73 / 0 / 73 | 0 | 완료 |
 | └─ `replace/giga_modifiers_replace_key.csv` | 100.0% | 6 / 0 / 6 | 0 | 완료 |
-| `government_variety_pack__2806903835` | 98.5% | 3,032 / 47 / 3,079 | 8 | 진행 중 (의심 47) |
-| └─ `lrsk_gvp_key.csv` | 98.5% | 3,026 / 47 / 3,073 | 8 | 진행 중 (의심 47) |
+| `government_variety_pack__2806903835` | 100.0% | 3,079 / 0 / 3,079 | 8 | 완료 |
+| └─ `lrsk_gvp_key.csv` | 100.0% | 3,073 / 0 / 3,073 | 8 | 완료 |
 | └─ `lrsk_gvp_real_loc_key.csv` | 100.0% | 6 / 0 / 6 | 0 | 완료 |
 | `hyperlane_master__3667301724` | 99.1% | 224 / 2 / 226 | 0 | 진행 중 (의심 2) |
 | └─ `hl_master_key.csv` | 99.1% | 224 / 2 / 226 | 0 | 진행 중 (의심 2) |
@@ -180,164 +180,156 @@
 | `more_ai_personalities__701432146` | 100.0% | 1,891 / 0 / 1,891 | 0 | 완료 |
 | └─ `map_basic_key.csv` | 100.0% | 174 / 0 / 174 | 0 | 완료 |
 | └─ `map_dip_messages_key.csv` | 100.0% | 1,717 / 0 / 1,717 | 0 | 완료 |
-| `more_events_mod__727000451` | 89.7% | 12,437 / 1,429 / 13,866 | 171 | 진행 중 (의심 1,429) |
-| └─ `name_lists/name_list_mem_DWARVES_key.csv` | 0.0% | 0 / 538 / 538 | 0 | 미시작 |
-| └─ `mem_asp_key.csv` | 3.1% | 15 / 463 / 478 | 0 | 진행 중 (의심 463) |
-| └─ `mem_scfe_story_pack_key.csv` | 73.2% | 123 / 45 / 168 | 2 | 진행 중 (의심 45) |
-| └─ `mem_caretakers_key.csv` | 75.0% | 6 / 2 / 8 | 0 | 진행 중 (의심 2) |
-| └─ `mem_scfe_key.csv` | 76.2% | 426 / 133 / 559 | 0 | 진행 중 (의심 133) |
-| └─ `mem_cold_key.csv` | 76.5% | 13 / 4 / 17 | 0 | 진행 중 (의심 4) |
-| └─ `mem_scfe_celestial_disturbance_key.csv` | 79.4% | 54 / 14 / 68 | 0 | 진행 중 (의심 14) |
-| └─ `mem_planetary_shields_key.csv` | 81.8% | 18 / 4 / 22 | 0 | 진행 중 (의심 4) |
-| └─ `mem_scfe_ziaskehorn_key.csv` | 82.9% | 34 / 7 / 41 | 0 | 진행 중 (의심 7) |
-| └─ `mem_modifiers_key.csv` | 84.2% | 16 / 3 / 19 | 0 | 진행 중 (의심 3) |
-| └─ `mem_through_the_fog_key.csv` | 84.6% | 11 / 2 / 13 | 0 | 진행 중 (의심 2) |
-| └─ `mem_diversity_key.csv` | 85.0% | 17 / 3 / 20 | 0 | 진행 중 (의심 3) |
-| └─ `mem_voggo_key.csv` | 87.1% | 27 / 4 / 31 | 0 | 진행 중 (의심 4) |
-| └─ `mem_foss_sky_key.csv` | 87.5% | 14 / 2 / 16 | 0 | 진행 중 (의심 2) |
-| └─ `mem_agrarian_key.csv` | 88.2% | 15 / 2 / 17 | 0 | 진행 중 (의심 2) |
-| └─ `mem_cliffhanger_key.csv` | 88.2% | 15 / 2 / 17 | 0 | 진행 중 (의심 2) |
-| └─ `mem_sentinel_key.csv` | 89.5% | 17 / 2 / 19 | 1 | 진행 중 (의심 2) |
+| `more_events_mod__727000451` | 99.9% | 13,852 / 14 / 13,866 | 171 | 진행 중 (의심 14) |
 | └─ `mem_ex_planet_key.csv` | 90.0% | 9 / 1 / 10 | 0 | 진행 중 (의심 1) |
-| └─ `mem_rebel_yell_key.csv` | 90.1% | 64 / 7 / 71 | 9 | 진행 중 (의심 7) |
-| └─ `mem_engineered_wildlife_key.csv` | 90.9% | 10 / 1 / 11 | 0 | 진행 중 (의심 1) |
-| └─ `mem_severance_key.csv` | 91.0% | 61 / 6 / 67 | 3 | 진행 중 (의심 6) |
 | └─ `mem_enterprise_fallen_key.csv` | 91.7% | 22 / 2 / 24 | 0 | 진행 중 (의심 2) |
-| └─ `mem_starfighter_key.csv` | 92.0% | 23 / 2 / 25 | 0 | 진행 중 (의심 2) |
-| └─ `mem_dwarf_fortress_key.csv` | 92.5% | 49 / 4 / 53 | 0 | 진행 중 (의심 4) |
-| └─ `mem_dpe_fe_events_key.csv` | 92.5% | 62 / 5 / 67 | 0 | 진행 중 (의심 5) |
-| └─ `mem_native_problem_key.csv` | 92.6% | 25 / 2 / 27 | 0 | 진행 중 (의심 2) |
-| └─ `mem_vestigial_wormhole_key.csv` | 93.0% | 66 / 5 / 71 | 3 | 진행 중 (의심 5) |
-| └─ `mem_lunar_gate_key.csv` | 93.2% | 41 / 3 / 44 | 0 | 진행 중 (의심 3) |
-| └─ `mem_into_the_woods_key.csv` | 93.3% | 28 / 2 / 30 | 0 | 진행 중 (의심 2) |
-| └─ `mem_ashes_key.csv` | 93.4% | 57 / 4 / 61 | 0 | 진행 중 (의심 4) |
-| └─ `mem_blacksite_key.csv` | 93.5% | 186 / 13 / 199 | 4 | 진행 중 (의심 13) |
-| └─ `mem_dread_pirate_key.csv` | 94.1% | 95 / 6 / 101 | 3 | 진행 중 (의심 6) |
-| └─ `mem_doom_key.csv` | 94.3% | 33 / 2 / 35 | 1 | 진행 중 (의심 2) |
-| └─ `mem_crawler_key.csv` | 94.4% | 68 / 4 / 72 | 0 | 진행 중 (의심 4) |
-| └─ `mem_mountain_key.csv` | 94.7% | 72 / 4 / 76 | 2 | 진행 중 (의심 4) |
-| └─ `mem_pioneer_key.csv` | 94.7% | 18 / 1 / 19 | 0 | 진행 중 (의심 1) |
-| └─ `mem_pov_key.csv` | 94.9% | 356 / 19 / 375 | 0 | 진행 중 (의심 19) |
-| └─ `mem_towers_key.csv` | 95.3% | 41 / 2 / 43 | 0 | 진행 중 (의심 2) |
-| └─ `mem_left_for_dead_key.csv` | 95.5% | 42 / 2 / 44 | 0 | 진행 중 (의심 2) |
-| └─ `mem_maze_key.csv` | 95.7% | 89 / 4 / 93 | 0 | 진행 중 (의심 4) |
-| └─ `mem_outsiders_key.csv` | 95.7% | 45 / 2 / 47 | 0 | 진행 중 (의심 2) |
-| └─ `mem_lost_emperor_key.csv` | 96.2% | 229 / 9 / 238 | 9 | 진행 중 (의심 9) |
-| └─ `mem_rogue_drone_key.csv` | 96.2% | 51 / 2 / 53 | 0 | 진행 중 (의심 2) |
-| └─ `mem_death_world_key.csv` | 96.4% | 186 / 7 / 193 | 0 | 진행 중 (의심 7) |
-| └─ `mem_aevum_key.csv` | 96.4% | 379 / 14 / 393 | 1 | 진행 중 (의심 14) |
-| └─ `mem_hollow_asteroid_key.csv` | 96.5% | 82 / 3 / 85 | 1 | 진행 중 (의심 3) |
-| └─ `mem_scfe_strangeworlds_key.csv` | 96.5% | 138 / 5 / 143 | 0 | 진행 중 (의심 5) |
-| └─ `mem_broken_clock_key.csv` | 96.7% | 58 / 2 / 60 | 1 | 진행 중 (의심 2) |
-| └─ `mem_scfe_nyblax_key.csv` | 97.0% | 226 / 7 / 233 | 0 | 진행 중 (의심 7) |
-| └─ `mem_defying_gravity_key.csv` | 97.1% | 33 / 1 / 34 | 0 | 진행 중 (의심 1) |
-| └─ `mem_demon_ship_key.csv` | 97.1% | 33 / 1 / 34 | 0 | 진행 중 (의심 1) |
-| └─ `mem_rubicon_key.csv` | 97.2% | 69 / 2 / 71 | 24 | 진행 중 (의심 2) |
-| └─ `mem_ancient_robots_key.csv` | 97.3% | 72 / 2 / 74 | 0 | 진행 중 (의심 2) |
-| └─ `mem_primitives_key.csv` | 97.3% | 73 / 2 / 75 | 0 | 진행 중 (의심 2) |
-| └─ `mem_kay_sites_key.csv` | 97.6% | 123 / 3 / 126 | 0 | 진행 중 (의심 3) |
-| └─ `mem_key.csv` | 97.6% | 82 / 2 / 84 | 0 | 진행 중 (의심 2) |
-| └─ `mem_llayids_key.csv` | 97.9% | 46 / 1 / 47 | 0 | 진행 중 (의심 1) |
-| └─ `mem_rock_brain_key.csv` | 98.0% | 48 / 1 / 49 | 0 | 진행 중 (의심 1) |
-| └─ `mem_sleepers_key.csv` | 98.0% | 96 / 2 / 98 | 0 | 진행 중 (의심 2) |
-| └─ `mem_vazuran_menace_key.csv` | 98.0% | 447 / 9 / 456 | 30 | 진행 중 (의심 9) |
+| └─ `mem_diversity_key.csv` | 95.0% | 19 / 1 / 20 | 0 | 진행 중 (의심 1) |
+| └─ `mem_hollow_asteroid_key.csv` | 97.6% | 83 / 2 / 85 | 1 | 진행 중 (의심 2) |
 | └─ `mem_duel_ritual_key.csv` | 98.1% | 52 / 1 / 53 | 2 | 진행 중 (의심 1) |
-| └─ `mem_hive_encounter_key.csv` | 98.1% | 53 / 1 / 54 | 0 | 진행 중 (의심 1) |
-| └─ `mem_descended_key.csv` | 98.2% | 168 / 3 / 171 | 0 | 진행 중 (의심 3) |
-| └─ `mem_ceaseless_key.csv` | 98.5% | 133 / 2 / 135 | 0 | 진행 중 (의심 2) |
-| └─ `mem_extinct_abductors_1_key.csv` | 98.6% | 143 / 2 / 145 | 1 | 진행 중 (의심 2) |
-| └─ `mem_lunar_age_key.csv` | 98.7% | 150 / 2 / 152 | 0 | 진행 중 (의심 2) |
-| └─ `mem_eden_protocol_key.csv` | 98.8% | 170 / 2 / 172 | 1 | 진행 중 (의심 2) |
-| └─ `mem_crucible_key.csv` | 98.9% | 88 / 1 / 89 | 0 | 진행 중 (의심 1) |
-| └─ `mem_space_monster_attacks_key.csv` | 99.2% | 131 / 1 / 132 | 0 | 진행 중 (의심 1) |
-| └─ `mem_surveyor_key.csv` | 99.3% | 418 / 3 / 421 | 18 | 진행 중 (의심 3) |
+| └─ `mem_scfe_celestial_disturbance_key.csv` | 98.5% | 67 / 1 / 68 | 0 | 진행 중 (의심 1) |
+| └─ `mem_lunar_age_key.csv` | 99.3% | 151 / 1 / 152 | 0 | 진행 중 (의심 1) |
 | └─ `mem_food_constructor_key.csv` | 99.4% | 157 / 1 / 158 | 2 | 진행 중 (의심 1) |
-| └─ `mem_sadrell_key.csv` | 99.5% | 212 / 1 / 213 | 8 | 진행 중 (의심 1) |
-| └─ `mem_names_key.csv` | 99.7% | 360 / 1 / 361 | 0 | 진행 중 (의심 1) |
+| └─ `mem_pov_key.csv` | 99.5% | 373 / 2 / 375 | 0 | 진행 중 (의심 2) |
+| └─ `mem_lost_emperor_key.csv` | 99.6% | 237 / 1 / 238 | 9 | 진행 중 (의심 1) |
+| └─ `mem_scfe_key.csv` | 99.8% | 558 / 1 / 559 | 0 | 진행 중 (의심 1) |
 | └─ `aspmod_key.csv` | 100.0% | 519 / 0 / 519 | 11 | 완료 |
 | └─ `mem_abandoned_mecha_key.csv` | 100.0% | 9 / 0 / 9 | 0 | 완료 |
 | └─ `mem_accelerated_evolution_key.csv` | 100.0% | 5 / 0 / 5 | 0 | 완료 |
+| └─ `mem_aevum_key.csv` | 100.0% | 393 / 0 / 393 | 1 | 완료 |
+| └─ `mem_agrarian_key.csv` | 100.0% | 17 / 0 / 17 | 0 | 완료 |
 | └─ `mem_albino_crystal_key.csv` | 100.0% | 61 / 0 / 61 | 0 | 완료 |
 | └─ `mem_ancestors_grudge_key.csv` | 100.0% | 870 / 0 / 870 | 10 | 완료 |
 | └─ `mem_ancient_factory_key.csv` | 100.0% | 7 / 0 / 7 | 0 | 완료 |
 | └─ `mem_ancient_graveyard_key.csv` | 100.0% | 9 / 0 / 9 | 0 | 완료 |
+| └─ `mem_ancient_robots_key.csv` | 100.0% | 74 / 0 / 74 | 0 | 완료 |
 | └─ `mem_ancient_satellite_key.csv` | 100.0% | 11 / 0 / 11 | 0 | 완료 |
 | └─ `mem_ark_key.csv` | 100.0% | 48 / 0 / 48 | 0 | 완료 |
+| └─ `mem_ashes_key.csv` | 100.0% | 61 / 0 / 61 | 0 | 완료 |
+| └─ `mem_asp_key.csv` | 100.0% | 478 / 0 / 478 | 0 | 완료 |
 | └─ `mem_asteroid_computer_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
 | └─ `mem_asteroid_derelict_structure_key.csv` | 100.0% | 29 / 0 / 29 | 0 | 완료 |
 | └─ `mem_asteroid_structure_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
 | └─ `mem_astral_tales_key.csv` | 100.0% | 36 / 0 / 36 | 0 | 완료 |
 | └─ `mem_beached_key.csv` | 100.0% | 28 / 0 / 28 | 2 | 완료 |
 | └─ `mem_black_hole_1_key.csv` | 100.0% | 20 / 0 / 20 | 0 | 완료 |
+| └─ `mem_blacksite_key.csv` | 100.0% | 199 / 0 / 199 | 4 | 완료 |
 | └─ `mem_boiling_planet_key.csv` | 100.0% | 7 / 0 / 7 | 0 | 완료 |
 | └─ `mem_borehole_key.csv` | 100.0% | 27 / 0 / 27 | 0 | 완료 |
 | └─ `mem_brainworm_key.csv` | 100.0% | 53 / 0 / 53 | 0 | 완료 |
+| └─ `mem_broken_clock_key.csv` | 100.0% | 60 / 0 / 60 | 1 | 완료 |
 | └─ `mem_broken_clock_new_key.csv` | 100.0% | 2 / 0 / 2 | 0 | 완료 |
+| └─ `mem_caretakers_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
 | └─ `mem_catacombs_key.csv` | 100.0% | 12 / 0 / 12 | 0 | 완료 |
+| └─ `mem_ceaseless_key.csv` | 100.0% | 135 / 0 / 135 | 0 | 완료 |
 | └─ `mem_charmak_key.csv` | 100.0% | 17 / 0 / 17 | 1 | 완료 |
+| └─ `mem_cliffhanger_key.csv` | 100.0% | 17 / 0 / 17 | 0 | 완료 |
+| └─ `mem_cold_key.csv` | 100.0% | 17 / 0 / 17 | 0 | 완료 |
 | └─ `mem_colony_ship_key.csv` | 100.0% | 66 / 0 / 66 | 4 | 완료 |
 | └─ `mem_comet_lost_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
 | └─ `mem_command_system_key.csv` | 100.0% | 9 / 0 / 9 | 0 | 완료 |
 | └─ `mem_convict_key.csv` | 100.0% | 49 / 0 / 49 | 4 | 완료 |
 | └─ `mem_cracked_key.csv` | 100.0% | 29 / 0 / 29 | 0 | 완료 |
 | └─ `mem_crashed_object_key.csv` | 100.0% | 11 / 0 / 11 | 0 | 완료 |
+| └─ `mem_crawler_key.csv` | 100.0% | 72 / 0 / 72 | 0 | 완료 |
+| └─ `mem_crucible_key.csv` | 100.0% | 89 / 0 / 89 | 0 | 완료 |
 | └─ `mem_crystal_pyramid_key.csv` | 100.0% | 15 / 0 / 15 | 0 | 완료 |
 | └─ `mem_czar_alexei_key.csv` | 100.0% | 86 / 0 / 86 | 0 | 완료 |
 | └─ `mem_dead_star_key.csv` | 100.0% | 23 / 0 / 23 | 0 | 완료 |
+| └─ `mem_death_world_key.csv` | 100.0% | 193 / 0 / 193 | 0 | 완료 |
+| └─ `mem_defying_gravity_key.csv` | 100.0% | 34 / 0 / 34 | 0 | 완료 |
+| └─ `mem_demon_ship_key.csv` | 100.0% | 34 / 0 / 34 | 0 | 완료 |
+| └─ `mem_descended_key.csv` | 100.0% | 171 / 0 / 171 | 0 | 완료 |
 | └─ `mem_dimensional_rift_key.csv` | 100.0% | 23 / 0 / 23 | 0 | 완료 |
 | └─ `mem_disguised_planet_key.csv` | 100.0% | 19 / 0 / 19 | 1 | 완료 |
+| └─ `mem_doom_key.csv` | 100.0% | 35 / 0 / 35 | 1 | 완료 |
+| └─ `mem_dpe_fe_events_key.csv` | 100.0% | 67 / 0 / 67 | 0 | 완료 |
+| └─ `mem_dread_pirate_key.csv` | 100.0% | 101 / 0 / 101 | 3 | 완료 |
+| └─ `mem_dwarf_fortress_key.csv` | 100.0% | 53 / 0 / 53 | 0 | 완료 |
 | └─ `mem_eager_traders_key.csv` | 100.0% | 28 / 0 / 28 | 0 | 완료 |
 | └─ `mem_eager_traders_modifiers_key.csv` | 100.0% | 12 / 0 / 12 | 0 | 완료 |
+| └─ `mem_eden_protocol_key.csv` | 100.0% | 172 / 0 / 172 | 1 | 완료 |
 | └─ `mem_elusive_carcosa_key.csv` | 100.0% | 93 / 0 / 93 | 0 | 완료 |
+| └─ `mem_engineered_wildlife_key.csv` | 100.0% | 11 / 0 / 11 | 0 | 완료 |
+| └─ `mem_extinct_abductors_1_key.csv` | 100.0% | 145 / 0 / 145 | 1 | 완료 |
 | └─ `mem_flight_recorder_key.csv` | 100.0% | 9 / 0 / 9 | 0 | 완료 |
+| └─ `mem_foss_sky_key.csv` | 100.0% | 16 / 0 / 16 | 0 | 완료 |
 | └─ `mem_gaia_troubles_key.csv` | 100.0% | 51 / 0 / 51 | 0 | 완료 |
 | └─ `mem_giant_tank_key.csv` | 100.0% | 23 / 0 / 23 | 0 | 완료 |
 | └─ `mem_hidden_tundra_key.csv` | 100.0% | 9 / 0 / 9 | 0 | 완료 |
 | └─ `mem_hithere_key.csv` | 100.0% | 32 / 0 / 32 | 0 | 완료 |
+| └─ `mem_hive_encounter_key.csv` | 100.0% | 54 / 0 / 54 | 0 | 완료 |
 | └─ `mem_imperialist_intimidation_key.csv` | 100.0% | 11 / 0 / 11 | 0 | 완료 |
 | └─ `mem_imperialist_intimidation_modifiers_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
+| └─ `mem_into_the_woods_key.csv` | 100.0% | 30 / 0 / 30 | 0 | 완료 |
 | └─ `mem_june_19_anomalies_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
+| └─ `mem_kay_sites_key.csv` | 100.0% | 126 / 0 / 126 | 0 | 완료 |
+| └─ `mem_key.csv` | 100.0% | 84 / 0 / 84 | 0 | 완료 |
 | └─ `mem_last_orila_key.csv` | 100.0% | 91 / 0 / 91 | 0 | 완료 |
+| └─ `mem_left_for_dead_key.csv` | 100.0% | 44 / 0 / 44 | 0 | 완료 |
 | └─ `mem_living_asteroid_key.csv` | 100.0% | 6 / 0 / 6 | 0 | 완료 |
+| └─ `mem_llayids_key.csv` | 100.0% | 47 / 0 / 47 | 0 | 완료 |
 | └─ `mem_lost_robot_key.csv` | 100.0% | 43 / 0 / 43 | 0 | 완료 |
 | └─ `mem_lost_zoo_key.csv` | 100.0% | 11 / 0 / 11 | 0 | 완료 |
 | └─ `mem_lotc_key.csv` | 100.0% | 162 / 0 / 162 | 0 | 완료 |
+| └─ `mem_lunar_gate_key.csv` | 100.0% | 44 / 0 / 44 | 0 | 완료 |
 | └─ `mem_lunatics_key.csv` | 100.0% | 15 / 0 / 15 | 0 | 완료 |
 | └─ `mem_matrix_key.csv` | 100.0% | 18 / 0 / 18 | 0 | 완료 |
+| └─ `mem_maze_key.csv` | 100.0% | 93 / 0 / 93 | 0 | 완료 |
 | └─ `mem_metal_demon_key.csv` | 100.0% | 70 / 0 / 70 | 0 | 완료 |
 | └─ `mem_misc_slocs_key.csv` | 100.0% | 89 / 0 / 89 | 0 | 완료 |
+| └─ `mem_modifiers_key.csv` | 100.0% | 19 / 0 / 19 | 0 | 완료 |
 | └─ `mem_molten_core_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
 | └─ `mem_mortis_key.csv` | 100.0% | 214 / 0 / 214 | 2 | 완료 |
+| └─ `mem_mountain_key.csv` | 100.0% | 76 / 0 / 76 | 2 | 완료 |
 | └─ `mem_music_tour_key.csv` | 100.0% | 20 / 0 / 20 | 0 | 완료 |
 | └─ `mem_music_tour_modifiers_key.csv` | 100.0% | 14 / 0 / 14 | 0 | 완료 |
 | └─ `mem_mysterious_pyramids_key.csv` | 100.0% | 12 / 0 / 12 | 0 | 완료 |
+| └─ `mem_names_key.csv` | 100.0% | 361 / 0 / 361 | 0 | 완료 |
 | └─ `mem_nanobot_room_key.csv` | 100.0% | 12 / 0 / 12 | 0 | 완료 |
+| └─ `mem_native_problem_key.csv` | 100.0% | 27 / 0 / 27 | 0 | 완료 |
 | └─ `mem_near_miss_key.csv` | 100.0% | 21 / 0 / 21 | 0 | 완료 |
 | └─ `mem_options_key.csv` | 100.0% | 105 / 0 / 105 | 1 | 완료 |
 | └─ `mem_origins_key.csv` | 100.0% | 24 / 0 / 24 | 0 | 완료 |
 | └─ `mem_orila_primitives_key.csv` | 100.0% | 112 / 0 / 112 | 0 | 완료 |
 | └─ `mem_orila_ships_key.csv` | 100.0% | 96 / 0 / 96 | 0 | 완료 |
+| └─ `mem_outsiders_key.csv` | 100.0% | 47 / 0 / 47 | 0 | 완료 |
 | └─ `mem_paradise_worlds_key.csv` | 100.0% | 2 / 0 / 2 | 0 | 완료 |
 | └─ `mem_pi_writing_key.csv` | 100.0% | 3 / 0 / 3 | 0 | 완료 |
+| └─ `mem_pioneer_key.csv` | 100.0% | 19 / 0 / 19 | 0 | 완료 |
 | └─ `mem_planet_classes_key.csv` | 100.0% | 4 / 0 / 4 | 0 | 완료 |
+| └─ `mem_planetary_shields_key.csv` | 100.0% | 22 / 0 / 22 | 0 | 완료 |
 | └─ `mem_planetophage_key.csv` | 100.0% | 41 / 0 / 41 | 0 | 완료 |
 | └─ `mem_plants_vs_zombies_key.csv` | 100.0% | 21 / 0 / 21 | 0 | 완료 |
 | └─ `mem_poisoned_world_key.csv` | 100.0% | 12 / 0 / 12 | 0 | 완료 |
 | └─ `mem_premature_ageing_key.csv` | 100.0% | 24 / 0 / 24 | 0 | 완료 |
 | └─ `mem_primitive_buildings_key.csv` | 100.0% | 47 / 0 / 47 | 0 | 완료 |
 | └─ `mem_primitive_civil_war_key.csv` | 100.0% | 15 / 0 / 15 | 0 | 완료 |
+| └─ `mem_primitives_key.csv` | 100.0% | 75 / 0 / 75 | 0 | 완료 |
+| └─ `mem_rebel_yell_key.csv` | 100.0% | 71 / 0 / 71 | 9 | 완료 |
 | └─ `mem_refuel_key.csv` | 100.0% | 18 / 0 / 18 | 0 | 완료 |
+| └─ `mem_rock_brain_key.csv` | 100.0% | 49 / 0 / 49 | 0 | 완료 |
+| └─ `mem_rogue_drone_key.csv` | 100.0% | 53 / 0 / 53 | 0 | 완료 |
+| └─ `mem_rubicon_key.csv` | 100.0% | 71 / 0 / 71 | 24 | 완료 |
+| └─ `mem_sadrell_key.csv` | 100.0% | 213 / 0 / 213 | 8 | 완료 |
 | └─ `mem_satellite_cloud_key.csv` | 100.0% | 29 / 0 / 29 | 0 | 완료 |
 | └─ `mem_scfe_anomalies_key.csv` | 100.0% | 26 / 0 / 26 | 0 | 완료 |
+| └─ `mem_scfe_nyblax_key.csv` | 100.0% | 233 / 0 / 233 | 0 | 완료 |
 | └─ `mem_scfe_roots_key.csv` | 100.0% | 93 / 0 / 93 | 1 | 완료 |
 | └─ `mem_scfe_specimens_key.csv` | 100.0% | 3 / 0 / 3 | 0 | 완료 |
+| └─ `mem_scfe_story_pack_key.csv` | 100.0% | 168 / 0 / 168 | 2 | 완료 |
+| └─ `mem_scfe_strangeworlds_key.csv` | 100.0% | 143 / 0 / 143 | 0 | 완료 |
+| └─ `mem_scfe_ziaskehorn_key.csv` | 100.0% | 41 / 0 / 41 | 0 | 완료 |
 | └─ `mem_science_convention_key.csv` | 100.0% | 58 / 0 / 58 | 0 | 완료 |
+| └─ `mem_sentinel_key.csv` | 100.0% | 19 / 0 / 19 | 1 | 완료 |
+| └─ `mem_severance_key.csv` | 100.0% | 67 / 0 / 67 | 3 | 완료 |
 | └─ `mem_shapes_under_ice_key.csv` | 100.0% | 16 / 0 / 16 | 0 | 완료 |
 | └─ `mem_ship_size_cap_key.csv` | 100.0% | 55 / 0 / 55 | 0 | 완료 |
 | └─ `mem_ships_key.csv` | 100.0% | 42 / 0 / 42 | 0 | 완료 |
 | └─ `mem_sight_unseen_key.csv` | 100.0% | 108 / 0 / 108 | 0 | 완료 |
+| └─ `mem_sleepers_key.csv` | 100.0% | 98 / 0 / 98 | 0 | 완료 |
 | └─ `mem_snowed_in_key.csv` | 100.0% | 62 / 0 / 62 | 0 | 완료 |
 | └─ `mem_solar_riches_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
+| └─ `mem_space_monster_attacks_key.csv` | 100.0% | 132 / 0 / 132 | 0 | 완료 |
 | └─ `mem_space_race_key.csv` | 100.0% | 78 / 0 / 78 | 6 | 완료 |
 | └─ `mem_specimens_key.csv` | 100.0% | 30 / 0 / 30 | 0 | 완료 |
 | └─ `mem_spiritualists_pilgrimage_key.csv` | 100.0% | 70 / 0 / 70 | 0 | 완료 |
@@ -348,21 +340,29 @@
 | └─ `mem_star_survey_key.csv` | 100.0% | 24 / 0 / 24 | 0 | 완료 |
 | └─ `mem_star_survey_modifiers_key.csv` | 100.0% | 4 / 0 / 4 | 0 | 완료 |
 | └─ `mem_star_survey_projects_key.csv` | 100.0% | 8 / 0 / 8 | 0 | 완료 |
+| └─ `mem_starfighter_key.csv` | 100.0% | 25 / 0 / 25 | 0 | 완료 |
 | └─ `mem_starship_graveyard_key.csv` | 100.0% | 12 / 0 / 12 | 0 | 완료 |
 | └─ `mem_stuck_in_glacier_key.csv` | 100.0% | 66 / 0 / 66 | 0 | 완료 |
 | └─ `mem_subspace_beacon_key.csv` | 100.0% | 13 / 0 / 13 | 0 | 완료 |
+| └─ `mem_surveyor_key.csv` | 100.0% | 421 / 0 / 421 | 18 | 완료 |
 | └─ `mem_synthetic_sun_key.csv` | 100.0% | 47 / 0 / 47 | 0 | 완료 |
 | └─ `mem_tales_of_yore_key.csv` | 100.0% | 22 / 0 / 22 | 0 | 완료 |
 | └─ `mem_test_events_key.csv` | 100.0% | 56 / 0 / 56 | 0 | 완료 |
 | └─ `mem_the_ancient_signal_key.csv` | 100.0% | 22 / 0 / 22 | 0 | 완료 |
+| └─ `mem_through_the_fog_key.csv` | 100.0% | 13 / 0 / 13 | 0 | 완료 |
+| └─ `mem_towers_key.csv` | 100.0% | 43 / 0 / 43 | 0 | 완료 |
 | └─ `mem_under_blanket_key.csv` | 100.0% | 72 / 0 / 72 | 0 | 완료 |
 | └─ `mem_vazuran_event_system_key.csv` | 100.0% | 31 / 0 / 31 | 0 | 완료 |
+| └─ `mem_vazuran_menace_key.csv` | 100.0% | 456 / 0 / 456 | 30 | 완료 |
 | └─ `mem_version_check_key.csv` | 100.0% | 2 / 0 / 2 | 0 | 완료 |
+| └─ `mem_vestigial_wormhole_key.csv` | 100.0% | 71 / 0 / 71 | 3 | 완료 |
 | └─ `mem_viral_engine_key.csv` | 100.0% | 74 / 0 / 74 | 0 | 완료 |
 | └─ `mem_visitor_key.csv` | 100.0% | 125 / 0 / 125 | 0 | 완료 |
+| └─ `mem_voggo_key.csv` | 100.0% | 31 / 0 / 31 | 0 | 완료 |
 | └─ `mem_wargames_key.csv` | 100.0% | 25 / 0 / 25 | 0 | 완료 |
 | └─ `mem_we_are_gods_key.csv` | 100.0% | 5 / 0 / 5 | 0 | 완료 |
 | └─ `mem_wpdr_key.csv` | 100.0% | 22 / 0 / 22 | 2 | 완료 |
+| └─ `name_lists/name_list_mem_DWARVES_key.csv` | 100.0% | 538 / 0 / 538 | 0 | 완료 |
 | └─ `name_lists/name_list_ORILA_key.csv` | 100.0% | 265 / 0 / 265 | 0 | 완료 |
 | `more_leader_traits__3195070547` | 100.0% | 629 / 0 / 629 | 0 | 완료 |
 | └─ `mlt_hydra_key.csv` | 100.0% | 605 / 0 / 605 | 0 | 완료 |
@@ -385,8 +385,7 @@
 | └─ `nsc_technologies_key.csv` | 100.0% | 201 / 0 / 201 | 26 | 완료 |
 | └─ `nsc_tooltips_key.csv` | 100.0% | 37 / 0 / 37 | 0 | 완료 |
 | └─ `replace/nsc_replacements_key.csv` | 100.0% | 9 / 0 / 9 | 0 | 완료 |
-| `planetary_diversity__819148835` | 98.9% | 1,867 / 21 / 1,888 | 0 | 진행 중 (의심 21) |
-| └─ `planetarydiversity_planet_classes_key.csv` | 97.5% | 808 / 21 / 829 | 0 | 진행 중 (의심 21) |
+| `planetary_diversity__819148835` | 100.0% | 1,888 / 0 / 1,888 | 0 | 완료 |
 | └─ `!_pd_exotic_deposit_stubs_key.csv` | 100.0% | 20 / 0 / 20 | 0 | 완료 |
 | └─ `!_pd_unique_modifier_stubs_key.csv` | 100.0% | 3 / 0 / 3 | 0 | 완료 |
 | └─ `planetarydiversity_ascension_worlds_key.csv` | 100.0% | 116 / 0 / 116 | 0 | 완료 |
@@ -394,6 +393,7 @@
 | └─ `planetarydiversity_engine_events_key.csv` | 100.0% | 139 / 0 / 139 | 0 | 완료 |
 | └─ `planetarydiversity_key.csv` | 100.0% | 197 / 0 / 197 | 0 | 완료 |
 | └─ `planetarydiversity_more_arcs_key.csv` | 100.0% | 48 / 0 / 48 | 0 | 완료 |
+| └─ `planetarydiversity_planet_classes_key.csv` | 100.0% | 829 / 0 / 829 | 0 | 완료 |
 | └─ `planetarydiversity_planet_modifiers_key.csv` | 100.0% | 315 / 0 / 315 | 0 | 완료 |
 | └─ `planetarydiversity_start_screen_message_key.csv` | 100.0% | 9 / 0 / 9 | 0 | 완료 |
 | └─ `planetarydiversity_vanilla_overwrites_key.csv` | 100.0% | 1 / 0 / 1 | 0 | 완료 |
