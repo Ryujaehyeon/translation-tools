@@ -1,6 +1,6 @@
 # 자동키 번역률 트리
 
-최종 갱신: 2026-07-15 17:00
+최종 갱신: 2026-07-18 13:30
 
 이 문서는 `maintenance/translation_keys`의 CSV를 스캔해 모드/파일/번역률 순서로 정리한 진행률 표이다.
 번역률은 error 판정(empty/token_broken/no_hangul/quote_noise) 제외 기준이다. warning(identical/too_short)은 진행률에 영향 없음.
@@ -9,11 +9,11 @@
 
 | 항목 | 수량 |
 | --- | ---: |
-| 모드 폴더 | 49 |
-| CSV 파일 | 386 |
-| 번역 완료 행 | 106,439 |
+| 모드 폴더 | 48 |
+| CSV 파일 | 385 |
+| 번역 완료 행 | 106,438 |
 | 의심 번역 행 | 2,420 |
-| 번역 대상 행 | 108,859 |
+| 번역 대상 행 | 108,858 |
 | 전체 번역률 | 97.8% |
 | 원문 빈 값 행 | 866 |
 
@@ -104,8 +104,6 @@
 | └─ `name_lists/name_lists_fatalf_key.csv` | 100.0% | 11 / 0 / 11 | 0 | 완료 |
 | `flags_emblems_and_backgrounds_merged__2811907627` | 100.0% | 38 / 0 / 38 | 0 | 완료 |
 | └─ `flags_emblems_merger_key.csv` | 100.0% | 38 / 0 / 38 | 0 | 완료 |
-| `full_tiny_outliner__2948301103` | 100.0% | 1 / 0 / 1 | 0 | 완료 |
-| └─ `replace/tiny_outliner_key.csv` | 100.0% | 1 / 0 / 1 | 0 | 완료 |
 | `gigastructural_engineering_more_4_4__1121692237` | 99.6% | 24,280 / 89 / 24,369 | 108 | 진행 중 (의심 89) |
 | └─ `giga_extra_growth_key.csv` | 92.9% | 39 / 3 / 42 | 1 | 진행 중 (의심 3) |
 | └─ `replace/giga_replace_key.csv` | 98.8% | 84 / 1 / 85 | 0 | 진행 중 (의심 1) |
