@@ -83,8 +83,11 @@ def strip_trailing_comment(value: str) -> str:
     Stellaris allows trailing comments after `key: "..."`. The closing quote
     marks the end of the real value; anything after it (e.g. `# TODO ...`) must
     not become part of english_value or it would be translated and shown in
-    game. Embedded `\\"` escapes inside the string are preserved. Values that do
-    not start with a quote are returned unchanged (raw syntax kept as-is).
+    game. The closing quote is the first unescaped `"` followed only by
+    whitespace or a `#` comment, because the game also accepts unescaped
+    embedded quotes (`"a "quoted" word"`). Embedded `\\"` escapes inside the
+    string are preserved. Values that do not start with a quote are returned
+    unchanged (raw syntax kept as-is).
     """
     if not value.startswith('"'):
         return value
@@ -94,7 +97,9 @@ def strip_trailing_comment(value: str) -> str:
             i += 2
             continue
         if value[i] == '"':
-            return value[: i + 1]
+            rest = value[i + 1 :].strip()
+            if not rest or rest.startswith("#"):
+                return value[: i + 1]
         i += 1
     return value
 
